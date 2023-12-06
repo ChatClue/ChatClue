@@ -10,7 +10,20 @@ from openai import OpenAI
 
 q = queue.Queue()
 response_queue = queue.Queue()
+stop_signal = threading.Event()
 client = OpenAI()
+quiet_please_phrases = [
+    "be noiseless", "button it", "calm your voice", "cease speaking", 
+    "cease your chatter", "close your mouth", "cut it out", "don't speak", 
+    "end the noise", "enough", "go mute", "hush", "hush down", 
+    "hush now", "keep quiet", "keep it down", "keep the silence", "mum's the word", 
+    "mute", "muzzle it", "no chit chat", "no more words", "no talking", 
+    "not another word", "please stop", "put a lid on it", "quiet", "quietude", 
+    "shh", "shhh", "shut up", "silence", "silence yourself", "silence your lips", 
+    "speechless", "sshh", "stay mum", "stifle your speech", "stop", "stop babbling", 
+    "stop blabbering", "stop talking", "tone it down"
+]
+
 
 def int_or_str(text):
     """Helper function for argument parsing."""
@@ -25,8 +38,13 @@ def callback(indata, frames, time, status):
         print(status, file=sys.stderr)
     q.put(bytes(indata))
 
-def openai_stream(recognized_text):
-    """Streams response from OpenAI for the recognized text."""
+def contains_quiet_please_phrase(input_string):
+    for phrase in quiet_please_phrases:
+        if phrase in input_string:
+            return True
+    return False
+
+def openai_stream(recognized_text, stop_signal):
     response = client.chat.completions.create(
         model='gpt-3.5-turbo',
         messages=[
@@ -36,7 +54,10 @@ def openai_stream(recognized_text):
         stream=True
     )
     for chunk in response:
+        if stop_signal.is_set():
+            break
         response_queue.put(chunk)
+
 
 parser = argparse.ArgumentParser(add_help=False)
 parser.add_argument(
@@ -94,14 +115,23 @@ try:
                     print("")
                     if "robot" in result.lower():
                         if not openai_stream_thread or not openai_stream_thread.is_alive():
-                            openai_stream_thread = threading.Thread(target=openai_stream, args=(result,))
+                            stop_signal.clear()  # Reset the signal for a new request
+                            openai_stream_thread = threading.Thread(target=openai_stream, args=(result, stop_signal))
                             openai_stream_thread.start()
                     else:
                         print("I'm just listening to your conversation :)")
                         print("")
+            partial_result_json = json.loads(rec.PartialResult())
+            if 'partial' in partial_result_json and contains_quiet_please_phrase(partial_result_json['partial']):
+                # Signal to stop the current OpenAI stream
+                print("Okay, I'll be quiet")
+                stop_signal.set() 
+                with response_queue.mutex:
+                    response_queue.queue.clear()
 
             if dump_fn is not None:
                 dump_fn.write(data)
+
 
             while not response_queue.empty():
                 chunk = response_queue.get()
