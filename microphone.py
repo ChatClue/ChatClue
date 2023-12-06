@@ -1,3 +1,15 @@
+"""
+/********************************************************************************
+ * Copyright 2023-forever Osiris Development LLC
+ *
+ * All rights reserved. This code and any associated documentation are the
+ * proprietary and confidential property of Osiris Development LLC.
+ * Unauthorized use, copying, or distribution of this code, in whole or in part,
+ * is strictly prohibited and may result in severe legal consequences, except where 
+ * the code is licensed under apache 2.0
+ ********************************************************************************/
+"""
+
 import argparse
 import queue
 import sys
@@ -16,7 +28,7 @@ quiet_please_phrases = [
     "be noiseless", "button it", "calm your voice", "cease speaking", 
     "cease your chatter", "close your mouth", "cut it out", "don't speak", 
     "end the noise", "enough", "go mute", "hush", "hush down", 
-    "hush now", "keep quiet", "keep it down", "keep the silence", "mum's the word", 
+    "hush now", "keep quiet", "keep it down", "keep the silence", "mums the word", 
     "mute", "muzzle it", "no chit chat", "no more words", "no talking", 
     "not another word", "please stop", "put a lid on it", "quiet", "quietude", 
     "shh", "shhh", "shut up", "silence", "silence yourself", "silence your lips", 
