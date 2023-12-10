@@ -123,13 +123,10 @@ class AudioProcessor:
 
                     while not self.openai_client.response_queue.empty():
                         chunk = self.openai_client.response_queue.get()
-                        logging.info(chunk.choices[0].delta.content)
                         if chunk.choices[0].delta.content is not None:
-                            logging.info("EH")
-                            print(chunk.choices[0].delta.content, end='')
+                            print(chunk.choices[0].delta.content, end='', flush=True)    
                             self.update_response_end_time()
-                        else:
-                            logging.info("FALSE")
+                        
         except Exception as e:
             logging.error(f"An error occurred: {e}")
         finally:

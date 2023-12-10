@@ -12,11 +12,12 @@ def main():
     Retrieves audio settings from the configuration and initializes the AudioProcessor.
     """
     # Retrieve audio settings from the configuration file
-    sound_device_samplerate = AUDIO_SETTINGS['SOUND_DEVICE_SAMPLERATE'] if AUDIO_SETTINGS['SOUND_DEVICE_SAMPLERATE'] is not None else None
-    vosk_model = Model(lang=AUDIO_SETTINGS['VOSK_MODEL'] if AUDIO_SETTINGS['VOSK_MODEL'] is not None else "en-us")
-    sound_device_device = AUDIO_SETTINGS['SOUND_DEVICE_DEVICE'] if AUDIO_SETTINGS['SOUND_DEVICE_DEVICE'] is not None else None
-    sound_device_blocksize = AUDIO_SETTINGS['SOUND_DEVICE_BLOCK_SIZE'] if AUDIO_SETTINGS['SOUND_DEVICE_BLOCK_SIZE'] is not None else 28000
-    audio_in_dump_filename = AUDIO_SETTINGS['AUDIO_IN_DUMP_FILENAME'] if AUDIO_SETTINGS['AUDIO_IN_DUMP_FILENAME'] is not None else None
+    sound_device_samplerate = AUDIO_SETTINGS.get('SOUND_DEVICE_SAMPLERATE')
+    vosk_model = Model(lang=AUDIO_SETTINGS.get('VOSK_MODEL', "en-us"))
+    sound_device_device = AUDIO_SETTINGS.get('SOUND_DEVICE_DEVICE')
+    sound_device_blocksize = AUDIO_SETTINGS.get('SOUND_DEVICE_BLOCK_SIZE', 28000)
+    audio_in_dump_filename = AUDIO_SETTINGS.get('AUDIO_IN_DUMP_FILENAME')
+
 
     try: 
         # Initialize the audio processor with the configuration settings
