@@ -17,3 +17,8 @@ AUDIO_SETTINGS = {
     "SOUND_DEVICE_BLOCK_SIZE": 28000,
     "SOUND_DEVICE_DEVICE": "default"
 }
+
+OPENAI_SETTINGS = {
+    #"api_key": "sk-<your-openai-api-key>", # Optional. An OPENAI_API_KEY environment variable is also supported.
+    "model": "gpt-3.5-turbo"
+}
