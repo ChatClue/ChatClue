@@ -70,7 +70,6 @@ class OpenAIClient:
             recognized_text (str): The text recognized from the audio input.
         """
         self.streaming_complete = False
-        logging.info("conversation: " + str(conversation))
         response = self.create_completion(conversation)
         if response:
             for chunk in response:
