@@ -33,6 +33,7 @@ class OpenAIClient:
         self.stop_signal = threading.Event()
         self.model = OPENAI_SETTINGS.get('model', "gpt-3.5-turbo")
         self.embedding_model = OPENAI_SETTINGS.get('embedding_model', "text-embedding-ada-002")
+        self.streaming_complete = False
 
     def create_completion(self, recognized_text):
         """
@@ -68,6 +69,7 @@ class OpenAIClient:
         Args:
             recognized_text (str): The text recognized from the audio input.
         """
+        self.streaming_complete = False
         response = self.create_completion(recognized_text)
         if response:
             for chunk in response:
@@ -76,6 +78,7 @@ class OpenAIClient:
                 self.response_queue.put(chunk)
         else:
             logging.info("No response from OpenAI API or an error occurred.")
+        self.streaming_complete = True
 
     def create_embeddings(self, text):
         """

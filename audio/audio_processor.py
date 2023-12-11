@@ -101,7 +101,6 @@ class AudioProcessor:
                 while True:
                     current_time = time.time()
                     data = self.audio_queue.get()
-                    full_assistant_response = ''
                     if rec.AcceptWaveform(data):
                         result = json.loads(rec.Result())["text"]
                         if result != '':
@@ -112,7 +111,8 @@ class AudioProcessor:
                                     self.openai_client.stop_signal.clear()
                                     openai_stream_thread = threading.Thread(target=self.openai_client.stream_response, args=(result,))
                                     openai_stream_thread.start()
-                                    self.store_conversation(speakerType=CONVERSATIONS_CONFIG["user"], response=result)
+                                    logging.info("ROBOT ACTION: Comitting user input to memory.")
+                                    self.store_conversation(speaker_type=CONVERSATIONS_CONFIG["user"], response=result)
                             else:
                                 logging.info("ROBOT THOUGHT: Ignoring Conversation, it doesn't appear to be relevant.")
 
@@ -126,6 +126,7 @@ class AudioProcessor:
                     if self.dump_filename is not None:
                         self.dump_filename.write(data)
 
+                    full_assistant_response = ''
                     while not self.openai_client.response_queue.empty():
                         chunk = self.openai_client.response_queue.get()
                         if chunk.choices[0].delta.content is not None:
@@ -134,16 +135,21 @@ class AudioProcessor:
                             self.update_response_end_time()
                             # Append this chunk to the full response
                             full_assistant_response += response_text
-                    if full_assistant_response:
+                    
+                    if full_assistant_response and self.openai_client.streaming_complete:
                         # Commit the full response to memory
-                        self.store_conversation(speakerType=CONVERSATIONS_CONFIG["assistant"], response=full_assistant_response)
+                        print()
+                        logging.info("ROBOT ACTION: Comitting my response to memory.")
+                        self.store_conversation(speaker_type=CONVERSATIONS_CONFIG["assistant"], response=full_assistant_response)
+                        full_assistant_response = ''
+
                         
         except Exception as e:
             logging.error(f"An error occurred: {e}")
         finally:
             self.close_dump_file()
 
-    def store_conversation(self, speakerType, response):
+    def store_conversation(self, speaker_type, response):
         """
         Stores the conversation in the database.
 
@@ -151,4 +157,4 @@ class AudioProcessor:
             speakerType (str): "user" or "assistant", indicating who is speaking.
             response (str): The text of the response.
         """
-        self.conversation_memory_manager.add_conversation(speakerType=speakerType, response=response)
+        self.conversation_memory_manager.add_conversation(speaker_type=speaker_type, response=response)

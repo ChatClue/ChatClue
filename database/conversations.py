@@ -14,10 +14,8 @@ class ConversationMemoryManager:
         Initializes the ConversationManager with a database session.
         """
         self.engine = get_engine()
-        Session = sessionmaker(bind=self.engine)
-        self.session = Session()
 
-    def add_conversation(self, speakerType, response):
+    def add_conversation(self, speaker_type, response):
         """
         Adds a new conversation to the database, automatically creating embeddings and calculating token counts.
 
@@ -34,20 +32,25 @@ class ConversationMemoryManager:
         response_tokens = openai_client.calculate_token_count(response)
 
         new_conversation = Conversation(
-            speakerType=speakerType,
+            speaker_type=speaker_type,
             response=response,
-            responseTokens=response_tokens,
-            responseEmbedding=response_embedding,
+            response_tokens=response_tokens,
+            response_embedding=response_embedding,
         )
+        
+        Session = sessionmaker(bind=self.engine)
 
-        self.session.add(new_conversation)
-        self.session.commit()
+        with Session() as session:
+            session.add(new_conversation)
+            session.commit()
 
     def get_conversation(self, conversation_id):
         """
         Retrieves a conversation from the database by its ID.
         """
-        return self.session.query(Conversation).filter_by(id=conversation_id).first()
+        Session = sessionmaker(bind=self.engine)
+        with Session() as session:
+            return session.query(Conversation).filter_by(id=conversation_id).first()
 
     def update_conversation(self, conversation_id, **updates):
         """
@@ -65,17 +68,21 @@ class ConversationMemoryManager:
         Note:
             The fields in **updates should match the column names of the Conversation model.
         """
-        self.session.query(Conversation).filter_by(id=conversation_id).update(updates)
-        self.session.commit()
+        Session = sessionmaker(bind=self.engine)
+        with Session() as session:
+            session.query(Conversation).filter_by(id=conversation_id).update(updates)
+            session.commit()
 
     def delete_conversation(self, conversation_id):
         """
         Deletes a conversation from the database.
         """
-        conversation = self.session.query(Conversation).filter_by(id=conversation_id).first()
-        if conversation:
-            self.session.delete(conversation)
-            self.session.commit()
+        Session = sessionmaker(bind=self.engine)
+        with Session() as session:
+            conversation = self.session.query(Conversation).filter_by(id=conversation_id).first()
+            if conversation:
+                session.delete(conversation)
+                session.commit()
 
     def list_conversations(self, after_date=None, before_date=None):
         """
@@ -88,15 +95,17 @@ class ConversationMemoryManager:
         Returns:
             List of Conversation objects that match the criteria.
         """
-        query = self.session.query(Conversation)
-        
-        if after_date:
-            query = query.filter(Conversation.createdAt >= after_date)
-        
-        if before_date:
-            query = query.filter(Conversation.createdAt <= before_date)
+        Session = sessionmaker(bind=self.engine)
+        with Session() as session:
+            query = session.query(Conversation)
+            
+            if after_date:
+                query = query.filter(Conversation.createdAt >= after_date)
+            
+            if before_date:
+                query = query.filter(Conversation.createdAt <= before_date)
 
-        return query.all()
+            return query.all()
 
     def close_session(self):
         """
