@@ -1,6 +1,7 @@
 import queue
 import threading
 import logging
+import tiktoken
 from config import OPENAI_SETTINGS
 from openai import OpenAI, OpenAIError
 
@@ -30,9 +31,11 @@ class OpenAIClient:
             self.client = OpenAI()
         self.response_queue = queue.Queue()
         self.stop_signal = threading.Event()
-        self.model = OPENAI_SETTINGS.get('model', "gpt-3.5-turbo")
+        self.model = OPENAI_SETTINGS.get('model', "gpt-3.5-turbo-1106")
+        self.embedding_model = OPENAI_SETTINGS.get('embedding_model', "text-embedding-ada-002")
+        self.streaming_complete = False
 
-    def create_completion(self, recognized_text):
+    def create_completion(self, recent_messages):
         """
         Creates a completion request to the OpenAI API based on recognized text.
 
@@ -45,7 +48,7 @@ class OpenAIClient:
         try:
             response = self.client.chat.completions.create(
                 model=self.model,
-                messages=[{'role': 'user', 'content': recognized_text}],
+                messages=recent_messages,
                 temperature=0,
                 stream=True
             )
@@ -57,7 +60,7 @@ class OpenAIClient:
             logging.error(f"Error while creating completion: {e}")
             return None
 
-    def stream_response(self, recognized_text):
+    def stream_response(self, conversation):
         """
         Streams the response from the OpenAI API to a queue.
 
@@ -66,7 +69,9 @@ class OpenAIClient:
         Args:
             recognized_text (str): The text recognized from the audio input.
         """
-        response = self.create_completion(recognized_text)
+        self.streaming_complete = False
+        logging.info("conversation: " + str(conversation))
+        response = self.create_completion(conversation)
         if response:
             for chunk in response:
                 if self.stop_signal.is_set():
@@ -74,3 +79,41 @@ class OpenAIClient:
                 self.response_queue.put(chunk)
         else:
             logging.info("No response from OpenAI API or an error occurred.")
+        self.streaming_complete = True
+
+    def create_embeddings(self, text):
+        """
+        Generates embeddings for the given text using the OpenAI API.
+
+        Args:
+            text (str): The text to generate embeddings for.
+
+        Returns:
+            The embedding vector as a list, or None if an error occurs.
+        """
+        try:
+            response = self.client.embeddings.create(
+                model=self.embedding_model,
+                input=text
+            )
+            # return response.
+            return response.data[0].embedding
+        except OpenAIError as e:
+            logging.error(f"OpenAI API error: {e}")
+            return None
+        except Exception as e:
+            logging.error(f"Error while creating embeddings: {e}")
+            return None
+    
+    def calculate_token_count(self, text):
+        """
+        Calculates the number of tokens for the given text using OpenAI's GPT model.
+
+        Args:
+            text (str): The text to calculate the token count for.
+
+        Returns:
+            int: The number of tokens in the text.
+        """
+        enc = tiktoken.encoding_for_model(self.model)
+        return len(enc.encode(text))
