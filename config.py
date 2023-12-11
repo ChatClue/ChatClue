@@ -20,8 +20,9 @@ AUDIO_SETTINGS = {
 
 OPENAI_SETTINGS = {
     #"api_key": "sk-<your-openai-api-key>", # Optional. An OPENAI_API_KEY environment variable is also supported.
-    "model": "gpt-3.5-turbo",
-    "embedding_model": "text-embedding-ada-002"
+    "model": "gpt-3.5-turbo-1106",
+    "embedding_model": "text-embedding-ada-002",
+    "max_context_tokens": 16000
 }
 
 DATABASE_CONFIG = {

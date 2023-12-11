@@ -1,7 +1,8 @@
+from integrations.openai import OpenAIClient
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy.sql import func
 from .models import Conversation, Base
 from .connection import get_engine
-from integrations.openai import OpenAIClient
 
 class ConversationMemoryManager:
     """
@@ -107,8 +108,20 @@ class ConversationMemoryManager:
 
             return query.all()
 
-    def close_session(self):
+    def list_recent_conversations(self, context_limit):
         """
-        Closes the database session.
+        Lists recent conversations from the database such that their total token count is close to the context limit.
+
+        Returns:
+            List of Conversation objects that match the criteria.
         """
-        self.session.close()
+        Session = sessionmaker(bind=self.engine)
+        with Session() as session:
+            subquery = session.query(
+                Conversation,
+                func.sum(Conversation.response_tokens).over(order_by=Conversation.created_at.desc()).label('running_total')
+            ).subquery()
+
+            query = session.query(subquery).filter(subquery.c.running_total <= context_limit).order_by(subquery.c.created_at.asc())
+
+            return query.all()

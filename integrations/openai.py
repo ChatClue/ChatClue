@@ -31,11 +31,11 @@ class OpenAIClient:
             self.client = OpenAI()
         self.response_queue = queue.Queue()
         self.stop_signal = threading.Event()
-        self.model = OPENAI_SETTINGS.get('model', "gpt-3.5-turbo")
+        self.model = OPENAI_SETTINGS.get('model', "gpt-3.5-turbo-1106")
         self.embedding_model = OPENAI_SETTINGS.get('embedding_model', "text-embedding-ada-002")
         self.streaming_complete = False
 
-    def create_completion(self, recognized_text):
+    def create_completion(self, recent_messages):
         """
         Creates a completion request to the OpenAI API based on recognized text.
 
@@ -48,7 +48,7 @@ class OpenAIClient:
         try:
             response = self.client.chat.completions.create(
                 model=self.model,
-                messages=[{'role': 'user', 'content': recognized_text}],
+                messages=recent_messages,
                 temperature=0,
                 stream=True
             )
@@ -60,7 +60,7 @@ class OpenAIClient:
             logging.error(f"Error while creating completion: {e}")
             return None
 
-    def stream_response(self, recognized_text):
+    def stream_response(self, conversation):
         """
         Streams the response from the OpenAI API to a queue.
 
@@ -70,7 +70,8 @@ class OpenAIClient:
             recognized_text (str): The text recognized from the audio input.
         """
         self.streaming_complete = False
-        response = self.create_completion(recognized_text)
+        logging.info("conversation: " + str(conversation))
+        response = self.create_completion(conversation)
         if response:
             for chunk in response:
                 if self.stop_signal.is_set():

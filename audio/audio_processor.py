@@ -6,6 +6,7 @@ import time
 import sounddevice as sd
 from vosk import KaldiRecognizer
 from integrations.openai import OpenAIClient
+from integrations.openai_conversation_builder import OpenAIConversationBuilder
 from utils.audio_helpers import contains_quiet_please_phrase, contains_wake_phrase
 from database.conversations import ConversationMemoryManager
 from config import CONVERSATIONS_CONFIG
@@ -32,6 +33,7 @@ class AudioProcessor:
         self.audio_queue = queue.Queue()
         self.openai_client = OpenAIClient()
         self.conversation_memory_manager = ConversationMemoryManager()
+        self.openai_conversation_builder = OpenAIConversationBuilder()
         self.full_assistant_response = ''
         self.last_wake_time = 0
         self.last_response_end_time = 0
@@ -110,7 +112,8 @@ class AudioProcessor:
                                 self.update_wake_time()
                                 if not openai_stream_thread or not openai_stream_thread.is_alive():
                                     self.openai_client.stop_signal.clear()
-                                    openai_stream_thread = threading.Thread(target=self.openai_client.stream_response, args=(result,))
+                                    conversation = self.openai_conversation_builder.create_recent_conversation_messages_array(result)
+                                    openai_stream_thread = threading.Thread(target=self.openai_client.stream_response, args=(conversation,))
                                     openai_stream_thread.start()
                                     logging.info("ROBOT ACTION: Comitting user input to memory.")
                                     self.store_conversation(speaker_type=CONVERSATIONS_CONFIG["user"], response=result)
@@ -119,7 +122,7 @@ class AudioProcessor:
 
                     partial_result_json = json.loads(rec.PartialResult())
                     if 'partial' in partial_result_json and contains_quiet_please_phrase(partial_result_json['partial']):
-                        logging.info("ROBOT THOUGHT: Request to stop talking recognized. Stopping OpenAI Stream.")
+                        logging.info("ROBOT THOUGHT: Request to stop talking recognized. Stopping stream.")
                         self.openai_client.stop_signal.set()
                         with self.openai_client.response_queue.mutex:
                             self.openai_client.response_queue.queue.clear()
@@ -146,8 +149,8 @@ class AudioProcessor:
                         
 
                         
-        except Exception as e:
-            logging.error(f"An error occurred: {e}")
+        # except Exception as e:
+        #     logging.error(f"An error occurred: {e}")
         finally:
             self.close_dump_file()
 

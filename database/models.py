@@ -29,7 +29,7 @@ class Conversation(Base):
     updated_at = Column(DateTime(timezone=True), onupdate=func.now(),
                         doc="Timestamp when the conversation was last updated.")
     
-    speaker_type = Column(Text, nullable=False,
+    speaker_type = Column(Integer, nullable=False,
                         doc="The type of speaker (user or assistant).", index=True)
     
     speaker_metadata = Column(Text, nullable=True,
