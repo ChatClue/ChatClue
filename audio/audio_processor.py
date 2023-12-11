@@ -32,6 +32,7 @@ class AudioProcessor:
         self.audio_queue = queue.Queue()
         self.openai_client = OpenAIClient()
         self.conversation_memory_manager = ConversationMemoryManager()
+        self.full_assistant_response = ''
         self.last_wake_time = 0
         self.last_response_end_time = 0
 
@@ -122,11 +123,13 @@ class AudioProcessor:
                         self.openai_client.stop_signal.set()
                         with self.openai_client.response_queue.mutex:
                             self.openai_client.response_queue.queue.clear()
+                            if self.full_assistant_response:
+                                logging.info("ROBOT ACTION: Comitting my partial response to memory")
+                                self.store_full_assistant_response()
 
                     if self.dump_filename is not None:
                         self.dump_filename.write(data)
 
-                    full_assistant_response = ''
                     while not self.openai_client.response_queue.empty():
                         chunk = self.openai_client.response_queue.get()
                         if chunk.choices[0].delta.content is not None:
@@ -134,14 +137,13 @@ class AudioProcessor:
                             print(response_text, end='', flush=True)    
                             self.update_response_end_time()
                             # Append this chunk to the full response
-                            full_assistant_response += response_text
+                            self.full_assistant_response += response_text
                     
-                    if full_assistant_response and self.openai_client.streaming_complete:
+                    if self.full_assistant_response and self.openai_client.streaming_complete:
                         # Commit the full response to memory
-                        print()
-                        logging.info("ROBOT ACTION: Comitting my response to memory.")
-                        self.store_conversation(speaker_type=CONVERSATIONS_CONFIG["assistant"], response=full_assistant_response)
-                        full_assistant_response = ''
+                        logging.info("ROBOT ACTION: Comitting my full response to memory")
+                        self.store_full_assistant_response()
+                        
 
                         
         except Exception as e:
@@ -149,9 +151,16 @@ class AudioProcessor:
         finally:
             self.close_dump_file()
 
+    def store_full_assistant_response(self):
+        """
+        Stores the full assistant response in the database.
+        """
+        self.store_conversation(speaker_type=CONVERSATIONS_CONFIG["assistant"], response=self.full_assistant_response)
+        self.full_assistant_response = ''
+
     def store_conversation(self, speaker_type, response):
         """
-        Stores the conversation in the database.
+        Stores the conversation part in the database.
 
         Args:
             speakerType (str): "user" or "assistant", indicating who is speaking.

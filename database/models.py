@@ -36,7 +36,7 @@ class Conversation(Base):
                         doc="The metadata of the speaker.") # Future planning for speaker diarization.
     
     response = Column(Text, nullable=False, 
-                        doc="The text of the user'sprompt in the conversation.")
+                        doc="The text of the user's prompt in the conversation.")
     
     response_tokens = Column(Integer, nullable=False, 
                     doc="The count of tokens in the users's prompt.")
