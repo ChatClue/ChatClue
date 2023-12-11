@@ -1,0 +1,46 @@
+# database/models.py
+
+from sqlalchemy import Column, Integer, Text, DateTime
+from sqlalchemy.ext.declarative import declarative_base
+from pgvector.sqlalchemy import Vector
+from sqlalchemy.sql import func
+
+# Base class for declarative class definitions
+Base = declarative_base()
+
+class Conversation(Base):
+    """
+    Represents the 'conversations' table in the database.
+
+    This class defines the schema for storing conversation data, including
+    user prompts and assistant responses along with their respective embeddings.
+    """
+
+    # Name of the table in the database
+    __tablename__ = 'conversations'
+
+    # Columns of the table
+    id = Column(Integer, primary_key=True, 
+                doc="The unique identifier for each conversation.")
+    
+    createdAt = Column(DateTime(timezone=True), server_default=func.now(),
+                        doc="Timestamp when the conversation was created.")
+    
+    updatedAt = Column(DateTime(timezone=True), onupdate=func.now(),
+                        doc="Timestamp when the conversation was last updated.")
+    
+    speakerType = Column(Text, nullable=False,
+                        doc="The type of speaker (user or assistant).", index=True)
+    
+    speakerMetadata = Column(Text, nullable=True,
+                        doc="The metadata of the speaker.") # Future planning for speaker diarization.
+    
+    response = Column(Text, nullable=False, 
+                        doc="The text of the user'sprompt in the conversation.")
+    
+    responseTokens = Column(Integer, nullable=False, 
+                    doc="The count of tokens in the users's prompt.")
+                                     
+    responseEmbedding = Column(Vector(1536), nullable=False,
+                                 doc="The vector embedding of the user's prompt, "
+                                     "representing linguistic features.")

@@ -7,6 +7,8 @@ import sounddevice as sd
 from vosk import KaldiRecognizer
 from integrations.openai import OpenAIClient
 from utils.audio_helpers import contains_quiet_please_phrase, contains_wake_phrase
+from database.conversations import ConversationMemoryManager
+from config import CONVERSATIONS_CONFIG
 
 class AudioProcessor:
     """
@@ -29,18 +31,19 @@ class AudioProcessor:
         self.dump_filename = dump_filename
         self.audio_queue = queue.Queue()
         self.openai_client = OpenAIClient()
+        self.conversation_memory_manager = ConversationMemoryManager()
         self.last_wake_time = 0
         self.last_response_end_time = 0
 
     def open_dump_file(self):
         """Opens the file to dump audio input if a filename is provided."""
         if self.dump_filename is not None:
-            self.dump_fn = open(self.dump_filename, "wb")
+            self.dump_filename = open(self.dump_filename, "wb")
 
     def close_dump_file(self):
         """Closes the audio dump file if it was opened."""
-        if self.dump_fn is not None:
-            self.dump_fn.close()
+        if self.dump_filename is not None:
+            self.dump_filename.close()
 
     def should_process(self, result, current_time):
         """
@@ -98,6 +101,7 @@ class AudioProcessor:
                 while True:
                     current_time = time.time()
                     data = self.audio_queue.get()
+                    full_assistant_response = ''
                     if rec.AcceptWaveform(data):
                         result = json.loads(rec.Result())["text"]
                         if result != '':
@@ -108,6 +112,7 @@ class AudioProcessor:
                                     self.openai_client.stop_signal.clear()
                                     openai_stream_thread = threading.Thread(target=self.openai_client.stream_response, args=(result,))
                                     openai_stream_thread.start()
+                                    self.store_conversation(speakerType=CONVERSATIONS_CONFIG["user"], response=result)
                             else:
                                 logging.info("ROBOT THOUGHT: Ignoring Conversation, it doesn't appear to be relevant.")
 
@@ -118,16 +123,32 @@ class AudioProcessor:
                         with self.openai_client.response_queue.mutex:
                             self.openai_client.response_queue.queue.clear()
 
-                    if self.dump_fn is not None:
-                        self.dump_fn.write(data)
+                    if self.dump_filename is not None:
+                        self.dump_filename.write(data)
 
                     while not self.openai_client.response_queue.empty():
                         chunk = self.openai_client.response_queue.get()
                         if chunk.choices[0].delta.content is not None:
-                            print(chunk.choices[0].delta.content, end='', flush=True)    
+                            response_text = chunk.choices[0].delta.content
+                            print(response_text, end='', flush=True)    
                             self.update_response_end_time()
+                            # Append this chunk to the full response
+                            full_assistant_response += response_text
+                    if full_assistant_response:
+                        # Commit the full response to memory
+                        self.store_conversation(speakerType=CONVERSATIONS_CONFIG["assistant"], response=full_assistant_response)
                         
         except Exception as e:
             logging.error(f"An error occurred: {e}")
         finally:
             self.close_dump_file()
+
+    def store_conversation(self, speakerType, response):
+        """
+        Stores the conversation in the database.
+
+        Args:
+            speakerType (str): "user" or "assistant", indicating who is speaking.
+            response (str): The text of the response.
+        """
+        self.conversation_memory_manager.add_conversation(speakerType=speakerType, response=response)
