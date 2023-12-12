@@ -5,10 +5,12 @@ import threading
 import time
 import sounddevice as sd
 from vosk import KaldiRecognizer
+from .audio_out import AudioOutput
 from integrations.openai import OpenAIClient
 from integrations.openai_conversation_builder import OpenAIConversationBuilder
 from utils.audio_helpers import contains_quiet_please_phrase, contains_wake_phrase
 from background.memory.tasks import store_conversation_task
+# from background.audio.tasks import play_audio_task
 from database.conversations import ConversationMemoryManager
 from config import CONVERSATIONS_CONFIG
 
@@ -35,6 +37,7 @@ class AudioProcessor:
         self.openai_client = OpenAIClient()
         self.conversation_memory_manager = ConversationMemoryManager()
         self.openai_conversation_builder = OpenAIConversationBuilder()
+        self.audio_out = AudioOutput()
         self.full_assistant_response = ''
         self.last_wake_time = 0
         self.last_response_end_time = 0
@@ -103,7 +106,7 @@ class AudioProcessor:
                     data = self.audio_queue.get()
                     if rec.AcceptWaveform(data):
                         result = json.loads(rec.Result())["text"]
-                        if result != '':
+                        if result != '' and result != 'huh':
                             logging.info("ROBOT HEARD: " + result)
                             if self.should_process(result, current_time):
                                 self.update_wake_time()
@@ -120,12 +123,16 @@ class AudioProcessor:
                     partial_result_json = json.loads(rec.PartialResult())
                     if 'partial' in partial_result_json and contains_quiet_please_phrase(partial_result_json['partial']):
                         logging.info("ROBOT THOUGHT: Request to stop talking recognized. Stopping stream.")
+                        #stopping openai api stream
                         self.openai_client.stop_signal.set()
                         with self.openai_client.response_queue.mutex:
                             self.openai_client.response_queue.queue.clear()
                             if self.full_assistant_response:
                                 logging.info("ROBOT ACTION: Comitting my partial response to memory")
                                 self.store_full_assistant_response()
+                        #stopping audio output
+                        logging.info("ROBOT ACTION: Stopping audio output.")
+                        self.audio_out.stop_audio()
 
                     if self.dump_filename is not None:
                         self.dump_filename.write(data)
@@ -137,11 +144,13 @@ class AudioProcessor:
                             print(response_text, end='', flush=True)    
                             self.update_response_end_time()
                             # Append this chunk to the full response
+                            # play_audio_task.delay(response_text)
                             self.full_assistant_response += response_text
                     
                     if self.full_assistant_response and self.openai_client.streaming_complete:
                         # Commit the full response to memory
                         logging.info("ROBOT ACTION: Comitting my full response to memory")
+                        self.audio_out.text_to_speech(self.full_assistant_response)
                         self.store_full_assistant_response()
                         
 
