@@ -20,9 +20,10 @@ AUDIO_SETTINGS = {
 
 OPENAI_SETTINGS = {
     #"api_key": "sk-<your-openai-api-key>", # Optional. An OPENAI_API_KEY environment variable is also supported.
-    "model": "gpt-3.5-turbo-1106",
+    "model": "gpt-4-1106-preview",
     "embedding_model": "text-embedding-ada-002",
-    "max_context_tokens": 16000
+    "max_context_tokens": 16000,
+    "initial_system_message": "You are a friendly, helpful assistant with audio output. Your responses should be formatted in such a way that they can be read aloud to the user. You are a robot.", #Optional.
 }
 
 DATABASE_CONFIG = {
@@ -36,4 +37,11 @@ DATABASE_CONFIG = {
 CONVERSATIONS_CONFIG = {
     "user": 1,
     "assistant": 2
+}
+
+CELERY_CONFIG = {
+    "RUN_LOCALLY_AUTOMATICALLY": True, # Set to False if you want to start celery manually `celery -A osiris.celery_app worker --loglevel=info` or if celery is running separately. True is best for development enviornments.
+    "LOCAL_LOG_LEVEL": "info", # Set to "debug" for more verbose logging.
+    "APPLICATION_NAME": "osiris",
+    "BROKER_URL": 'redis://localhost:6379/0'
 }

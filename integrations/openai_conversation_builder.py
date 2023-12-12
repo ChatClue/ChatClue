@@ -26,6 +26,8 @@ class OpenAIConversationBuilder:
 
         # Format conversations for OpenAI API
         messages = []
+        if OPENAI_SETTINGS.get('initial_system_message'):
+            messages.append({'role': 'system', 'content': OPENAI_SETTINGS.get('initial_system_message')})
         for conversation in recent_conversations:
             speaker_role = "user" if conversation.speaker_type == CONVERSATIONS_CONFIG.get("user") else "assistant"
             messages.append({
