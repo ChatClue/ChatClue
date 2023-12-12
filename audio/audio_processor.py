@@ -8,6 +8,7 @@ from vosk import KaldiRecognizer
 from integrations.openai import OpenAIClient
 from integrations.openai_conversation_builder import OpenAIConversationBuilder
 from utils.audio_helpers import contains_quiet_please_phrase, contains_wake_phrase
+from background.memory.tasks import store_conversation_task
 from database.conversations import ConversationMemoryManager
 from config import CONVERSATIONS_CONFIG
 
@@ -94,10 +95,6 @@ class AudioProcessor:
         try:
             with sd.RawInputStream(samplerate=self.samplerate, blocksize=self.blocksize, device=self.device,
                                 dtype="int16", channels=1, callback=self.callback):
-                logging.info("#" * 80)
-                logging.info("Press Ctrl+C to stop the recording")
-                logging.info("#" * 80)
-
                 rec = KaldiRecognizer(self.model, self.samplerate)
                 openai_stream_thread = None
 
@@ -149,8 +146,8 @@ class AudioProcessor:
                         
 
                         
-        # except Exception as e:
-        #     logging.error(f"An error occurred: {e}")
+        except Exception as e:
+            logging.error(f"An error occurred: {e}")
         finally:
             self.close_dump_file()
 
@@ -163,10 +160,10 @@ class AudioProcessor:
 
     def store_conversation(self, speaker_type, response):
         """
-        Stores the conversation part in the database.
+        Stores the conversation part in the database asynchronously using a Celery task.
 
         Args:
             speakerType (str): "user" or "assistant", indicating who is speaking.
             response (str): The text of the response.
         """
-        self.conversation_memory_manager.add_conversation(speaker_type=speaker_type, response=response)
+        store_conversation_task.delay(speaker_type=speaker_type, response=response)
