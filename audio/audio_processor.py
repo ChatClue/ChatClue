@@ -10,7 +10,6 @@ from integrations.openai import OpenAIClient
 from integrations.openai_conversation_builder import OpenAIConversationBuilder
 from utils.audio_helpers import contains_quiet_please_phrase, contains_wake_phrase
 from background.memory.tasks import store_conversation_task
-from background.audio.tasks import play_audio_task
 from database.conversations import ConversationMemoryManager
 from config import CONVERSATIONS_CONFIG
 
@@ -38,6 +37,7 @@ class AudioProcessor:
         self.conversation_memory_manager = ConversationMemoryManager()
         self.openai_conversation_builder = OpenAIConversationBuilder()
         self.audio_out = AudioOutput()
+        self.audio_out_response_buffer = ''
         self.full_assistant_response = ''
         self.last_wake_time = 0
         self.last_response_end_time = 0
@@ -143,8 +143,16 @@ class AudioProcessor:
                             response_text = chunk.choices[0].delta.content
                             print(response_text, end='', flush=True)    
                             self.update_response_end_time()
+                            # Play audio associated with this chunk via our TTS
+                            # Append to buffer
+                            self.audio_out_response_buffer += response_text
+                            # Check if buffer ends with a sentence
+                            if self.audio_out_response_buffer.endswith(('.', '?', '!')):
+                                # Queue the complete sentence for audio output
+                                self.audio_out.add_to_queue(self.audio_out_response_buffer)
+                                # Clear the buffer
+                                self.audio_out_response_buffer = ""
                             # Append this chunk to the full response
-                            play_audio_task.delay(response_text)
                             self.full_assistant_response += response_text
                     
                     if self.full_assistant_response and self.openai_client.streaming_complete:

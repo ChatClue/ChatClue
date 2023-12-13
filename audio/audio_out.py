@@ -1,9 +1,9 @@
 from google.cloud import texttospeech
-from celery import Celery
-from celery_config import get_celery_app
 from config import GOOGLE_TTS_CONFIG
 import os
 import pygame
+import queue
+import threading
 
 class AudioOutput:
     def __init__(self):
@@ -26,6 +26,11 @@ class AudioOutput:
         self.volume_gain_db = GOOGLE_TTS_CONFIG.get('volume_gain_db', 0)
         self.audio_encoding = GOOGLE_TTS_CONFIG.get('audio_encoding', texttospeech.AudioEncoding.LINEAR16)
 
+        self.request_queue = queue.Queue()
+        self.audio_thread = threading.Thread(target=self.process_queue)
+        self.audio_thread.daemon = True
+        self.audio_thread.start()
+
     def text_to_speech(self, text):
         # Synthesize speech from the text
         synthesis_input = texttospeech.SynthesisInput(text=text)
@@ -41,19 +46,37 @@ class AudioOutput:
 
         # Play the synthesized audio
         self.play_audio(response.audio_content)
+    
+    def add_to_queue(self, text):
+        self.request_queue.put(text)
+
+    def process_queue(self):
+        while True:
+            text = self.request_queue.get()
+            if not self.is_playing():
+                self.text_to_speech(text)
+            self.request_queue.task_done()
+
+    def is_playing(self):
+        return pygame.mixer.music.get_busy()
 
     def play_audio(self, audio_content):
-        # Save and play audio content
+        if not audio_content:
+            print("Received empty audio content.")
+            return
+
         filename = "temp_audio_output.wav"
         with open(filename, 'wb') as out:
             out.write(audio_content)
 
-        pygame.mixer.music.load(filename)
-        pygame.mixer.music.play()
-        while pygame.mixer.music.get_busy():
-            pygame.time.Clock().tick(10)
+        try:
+            pygame.mixer.music.load(filename)
+            pygame.mixer.music.play()
+            while pygame.mixer.music.get_busy():
+                pygame.time.Clock().tick(10)
+        except pygame.error as e:
+            print(f"Error playing audio file: {e}")
 
-        # Optionally, delete the temporary audio file here
         os.remove(filename)
 
     def stop_audio(self):
@@ -61,6 +84,13 @@ class AudioOutput:
         pygame.mixer.music.stop()
     
     def stop_all_audio(self):
-        self.stop_audio_flag = True
+        self.clear_queue()
         self.stop_audio()
-        get_celery_app().control.purge()  # Purging Celery tasks
+
+    def clear_queue(self):
+        while not self.request_queue.empty():
+            try:
+                self.request_queue.get_nowait()  # Remove all items from the queue
+                self.request_queue.task_done()
+            except queue.Empty:
+                break
