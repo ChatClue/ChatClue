@@ -4,6 +4,7 @@ import os
 import pygame
 import queue
 import threading
+import time
 
 class AudioOutput:
     def __init__(self):
@@ -31,6 +32,11 @@ class AudioOutput:
         self.audio_thread.daemon = True
         self.audio_thread.start()
 
+        self.audio_files = queue.Queue()
+        self.play_thread = threading.Thread(target=self.play_sequentially)
+        self.play_thread.daemon = True
+        self.play_thread.start()
+
     def text_to_speech(self, text):
         # Synthesize speech from the text
         synthesis_input = texttospeech.SynthesisInput(text=text)
@@ -44,8 +50,10 @@ class AudioOutput:
 
         response = self.client.synthesize_speech(input=synthesis_input, voice=voice, audio_config=audio_config)
 
-        # Play the synthesized audio
-        self.play_audio(response.audio_content)
+        filename = f"temp_audio_{int(time.time())}.wav"
+        with open(filename, 'wb') as out:
+            out.write(response.audio_content)
+        self.audio_files.put(filename)
     
     def add_to_queue(self, text):
         self.request_queue.put(text)
@@ -53,22 +61,19 @@ class AudioOutput:
     def process_queue(self):
         while True:
             text = self.request_queue.get()
-            if not self.is_playing():
-                self.text_to_speech(text)
+            self.text_to_speech(text)
             self.request_queue.task_done()
+    
+    def play_sequentially(self):
+        while True:
+            if not self.is_playing() and not self.audio_files.empty():
+                filename = self.audio_files.get()
+                self.play_audio_file(filename)
 
     def is_playing(self):
         return pygame.mixer.music.get_busy()
 
-    def play_audio(self, audio_content):
-        if not audio_content:
-            print("Received empty audio content.")
-            return
-
-        filename = "temp_audio_output.wav"
-        with open(filename, 'wb') as out:
-            out.write(audio_content)
-
+    def play_audio_file(self, filename):
         try:
             pygame.mixer.music.load(filename)
             pygame.mixer.music.play()
@@ -84,8 +89,18 @@ class AudioOutput:
         pygame.mixer.music.stop()
     
     def stop_all_audio(self):
-        self.clear_queue()
         self.stop_audio()
+        self.clear_audio_files_queue()
+        self.clear_queue()
+
+    def clear_audio_files_queue(self):
+        while not self.audio_files.empty():
+            filename = self.audio_files.get()
+            try:
+                os.remove(filename)
+            except OSError as e:
+                print(f"Error removing file {filename}: {e}")
+            self.audio_files.task_done()
 
     def clear_queue(self):
         while not self.request_queue.empty():

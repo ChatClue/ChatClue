@@ -89,81 +89,91 @@ class AudioProcessor:
         self.audio_queue.put(bytes(indata))
 
     def process_stream(self):
-        """
-        Starts the audio processing stream, listens for speech, and processes it.
-        """
         self.open_dump_file()
         try:
             with sd.RawInputStream(samplerate=self.samplerate, blocksize=self.blocksize, device=self.device,
-                                dtype="int16", channels=1, callback=self.callback):
+                                   dtype="int16", channels=1, callback=self.callback):
                 rec = KaldiRecognizer(self.model, self.samplerate)
                 openai_stream_thread = None
 
                 while True:
-                    current_time = time.time()
-                    data = self.audio_queue.get()
-                    if rec.AcceptWaveform(data):
-                        result = json.loads(rec.Result())["text"]
-                        if result != '' and result != 'huh':
-                            logging.info("ROBOT HEARD: " + result)
-                            if self.should_process(result, current_time):
-                                self.update_wake_time()
-                                if not openai_stream_thread or not openai_stream_thread.is_alive():
-                                    self.openai_client.stop_signal.clear()
-                                    conversation = self.openai_conversation_builder.create_recent_conversation_messages_array(result)
-                                    openai_stream_thread = threading.Thread(target=self.openai_client.stream_response, args=(conversation,))
-                                    openai_stream_thread.start()
-                                    logging.info("ROBOT ACTION: Comitting user input to memory.")
-                                    self.store_conversation(speaker_type=CONVERSATIONS_CONFIG["user"], response=result)
-                            else:
-                                logging.info("ROBOT THOUGHT: Ignoring Conversation, it doesn't appear to be relevant.")
+                    data, current_time = self.get_audio_data()
+                    result = self.process_recognition(data, rec)
 
-                    partial_result_json = json.loads(rec.PartialResult())
-                    if 'partial' in partial_result_json and contains_quiet_please_phrase(partial_result_json['partial']):
-                        logging.info("ROBOT THOUGHT: Request to stop talking recognized. Stopping stream.")
-                        #stopping openai api stream
-                        self.openai_client.stop_signal.set()
-                        with self.openai_client.response_queue.mutex:
-                            self.openai_client.response_queue.queue.clear()
-                            if self.full_assistant_response:
-                                logging.info("ROBOT ACTION: Comitting my partial response to memory")
-                                self.store_full_assistant_response()
-                        #stopping audio output
-                        logging.info("ROBOT ACTION: Stopping audio output.")
-                        self.audio_out.stop_all_audio()
+                    if result:
+                        openai_stream_thread = self.handle_speech(result, openai_stream_thread, current_time)
 
-                    if self.dump_filename is not None:
-                        self.dump_filename.write(data)
+                    self.handle_partial_results(rec)
+                    self.write_to_dump_file(data)
+                    self.process_openai_response()
 
-                    while not self.openai_client.response_queue.empty():
-                        chunk = self.openai_client.response_queue.get()
-                        if chunk.choices[0].delta.content is not None:
-                            response_text = chunk.choices[0].delta.content
-                            print(response_text, end='', flush=True)    
-                            self.update_response_end_time()
-                            # Play audio associated with this chunk via our TTS
-                            # Append to buffer
-                            self.audio_out_response_buffer += response_text
-                            # Check if buffer ends with a sentence
-                            if self.audio_out_response_buffer.endswith(('.', '?', '!')):
-                                # Queue the complete sentence for audio output
-                                self.audio_out.add_to_queue(self.audio_out_response_buffer)
-                                # Clear the buffer
-                                self.audio_out_response_buffer = ""
-                            # Append this chunk to the full response
-                            self.full_assistant_response += response_text
-                    
-                    if self.full_assistant_response and self.openai_client.streaming_complete:
-                        # Commit the full response to memory
-                        logging.info("ROBOT ACTION: Comitting my full response to memory")
-                        self.store_full_assistant_response()
-                        
-
-                        
         except Exception as e:
             logging.error(f"An error occurred: {e}")
         finally:
             self.close_dump_file()
+
+    def get_audio_data(self):
+        data = self.audio_queue.get()
+        current_time = time.time()
+        return data, current_time
+
+    def process_recognition(self, data, rec):
+        if rec.AcceptWaveform(data):
+            result = json.loads(rec.Result())["text"]
+            if result not in ['', 'huh']:
+                logging.info("ROBOT HEARD: " + result)
+                return result
+        return None
+
+    def handle_speech(self, result, openai_stream_thread, current_time):
+        if self.should_process(result, current_time):
+            self.update_wake_time()
+            if not openai_stream_thread or not openai_stream_thread.is_alive():
+                self.openai_client.stop_signal.clear()
+                conversation = self.openai_conversation_builder.create_recent_conversation_messages_array(result)
+                openai_stream_thread = threading.Thread(target=self.openai_client.stream_response, args=(conversation,))
+                openai_stream_thread.start()
+                logging.info("ROBOT ACTION: Committing user input to memory.")
+                self.store_conversation(speaker_type=CONVERSATIONS_CONFIG["user"], response=result)
+        else:
+            logging.info("ROBOT THOUGHT: Ignoring Conversation, it doesn't appear to be relevant.")
+        return openai_stream_thread
+
+    def handle_partial_results(self, rec):
+        partial_result_json = json.loads(rec.PartialResult())
+        if 'partial' in partial_result_json and contains_quiet_please_phrase(partial_result_json['partial']):
+            self.stop_conversation_and_audio()
+
+    def stop_conversation_and_audio(self):
+        logging.info("ROBOT THOUGHT: Request to stop talking recognized. Stopping stream.")
+        self.openai_client.stop_signal.set()
+        with self.openai_client.response_queue.mutex:
+            self.openai_client.response_queue.queue.clear()
+            if self.full_assistant_response:
+                logging.info("ROBOT ACTION: Committing my partial response to memory")
+                self.store_full_assistant_response()
+        self.audio_out.stop_all_audio()
+
+    def write_to_dump_file(self, data):
+        if self.dump_filename is not None:
+            self.dump_filename.write(data)
+
+    def process_openai_response(self):
+        while not self.openai_client.response_queue.empty():
+            chunk = self.openai_client.response_queue.get()
+            if chunk.choices[0].delta.content is not None:
+                response_text = chunk.choices[0].delta.content
+                print(response_text, end='', flush=True)
+                self.update_response_end_time()
+                self.audio_out_response_buffer += response_text
+                if self.audio_out_response_buffer.endswith(('.', '?', '!')):
+                    self.audio_out.add_to_queue(self.audio_out_response_buffer)
+                    self.audio_out_response_buffer = ""
+                self.full_assistant_response += response_text
+
+        if self.full_assistant_response and self.openai_client.streaming_complete:
+            logging.info("ROBOT ACTION: Committing my full response to memory")
+            self.store_full_assistant_response()
 
     def store_full_assistant_response(self):
         """
