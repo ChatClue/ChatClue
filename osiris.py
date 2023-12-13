@@ -1,6 +1,7 @@
 from config import AUDIO_SETTINGS, CELERY_CONFIG
 from vosk import Model
 from celery import Celery
+from celery_config import get_celery_app
 from database.setup import DatabaseSetup
 from audio.audio_processor import AudioProcessor
 import logging
@@ -10,8 +11,8 @@ import atexit
 # Configure basic logging for the application
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
-celery_app = Celery(CELERY_CONFIG['APPLICATION_NAME'], broker=CELERY_CONFIG['BROKER_URL'])
-celery_app.conf.update(CELERY_CONFIG)
+# Configure background processor / subconcious systems
+celery_app = get_celery_app()
 
 def start_celery_worker():
     """
