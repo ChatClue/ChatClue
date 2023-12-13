@@ -1,6 +1,6 @@
-from google.cloud import texttospeech
-from config import GOOGLE_TTS_CONFIG
+from config import TTS_CONFIG
 from utils.os.helpers import OSHelper
+import importlib
 import os
 import pygame
 import queue
@@ -17,43 +17,39 @@ class AudioOutput:
     """
     def __init__(self):
         """
-        Initializes the AudioOutput class with Google Cloud Text-to-Speech and pygame mixer settings.
+        Initializes the AudioOutput class with a dynamically selected TTS adapter, required threads, and pygame mixer settings.
         """
-        # Set Google Cloud credentials if provided via config
-        if 'api_key_path' in GOOGLE_TTS_CONFIG:
-            os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = GOOGLE_TTS_CONFIG['api_key_path']
-
-        # Initialize Google Cloud Text-to-Speech client
-        self.client = texttospeech.TextToSpeechClient()
+        tts_adapter_path = TTS_CONFIG['tts_adapter']
+        tts_module_name, tts_class_name = tts_adapter_path.rsplit(".", 1)
+        tts_module = importlib.import_module(tts_module_name)
+        tts_adapter_class = getattr(tts_module, tts_class_name)
+        self.tts_adapter = tts_adapter_class()  # Instantiate the TTS adapter
 
         # Initialize pygame for playing audio
         pygame.init()
-        pygame.mixer.init()
+        pygame.mixer.init() 
 
-        # Configuration settings
-        self.voice_model = GOOGLE_TTS_CONFIG.get('voice_model', 'en-US-Wavenet-D')
-        self.language_code = GOOGLE_TTS_CONFIG.get('language_code', 'en-US')
-        self.speaking_rate = GOOGLE_TTS_CONFIG.get('speaking_rate', 1.0)
-        self.pitch = GOOGLE_TTS_CONFIG.get('pitch', 0)
-        self.volume_gain_db = GOOGLE_TTS_CONFIG.get('volume_gain_db', 0)
-        self.audio_encoding = GOOGLE_TTS_CONFIG.get('audio_encoding', texttospeech.AudioEncoding.LINEAR16)
-
+        # Instantiate incoming text request_queue and outgoing audio ready_files queue.
         self.request_queue = queue.Queue()
         self.ready_files = queue.Queue()
+
+        # Create a thread to handle the incoming text process_queue
         self.audio_thread = threading.Thread(target=self.process_queue)
         self.audio_thread.daemon = True
         self.audio_thread.start()
 
+        # Create a thread to handle the outgoing audio ready_files
         self.play_thread = threading.Thread(target=self.play_sequentially)
         self.play_thread.daemon = True
         self.play_thread.start()
 
+        # Create locks for the process_queue and play threads
         self.tts_lock = threading.Lock()
         self.play_lock = threading.Lock()
 
     def text_to_speech(self, text):
         """
-        Converts text to speech using Google's Text-to-Speech API.
+        Converts text to speech using the configured TTS service.
 
         Args:
             text (str): The text to be converted to speech.
@@ -61,26 +57,7 @@ class AudioOutput:
         Returns:
             str: The filename of the generated audio file.
         """
-        # Generate the speech synthesis request
-        synthesis_input = texttospeech.SynthesisInput(text=text)
-        voice = texttospeech.VoiceSelectionParams(language_code=self.language_code, name=self.voice_model)
-        audio_config = texttospeech.AudioConfig(
-            audio_encoding=self.audio_encoding,
-            speaking_rate=self.speaking_rate,
-            pitch=self.pitch,
-            volume_gain_db=self.volume_gain_db
-        )
-
-        # Perform the text-to-speech request
-        response = self.client.synthesize_speech(input=synthesis_input, voice=voice, audio_config=audio_config)
-
-        # Create a unique filename for the audio file
-        filename = f"tmp/audio/temp_audio_{uuid.uuid4()}.wav"
-
-        # Save the synthesized speech to an audio file
-        with open(filename, 'wb') as out:
-            out.write(response.audio_content)
-        return filename
+        return self.tts_adapter.synthesize_speech(text)
     
     def add_to_queue(self, text):
         """
