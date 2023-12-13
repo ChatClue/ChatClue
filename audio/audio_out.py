@@ -5,6 +5,7 @@ import pygame
 import queue
 import threading
 import time
+import logging
 
 class AudioOutput:
     def __init__(self):
@@ -28,14 +29,16 @@ class AudioOutput:
         self.audio_encoding = GOOGLE_TTS_CONFIG.get('audio_encoding', texttospeech.AudioEncoding.LINEAR16)
 
         self.request_queue = queue.Queue()
+        self.ready_files = queue.Queue()
         self.audio_thread = threading.Thread(target=self.process_queue)
         self.audio_thread.daemon = True
         self.audio_thread.start()
 
-        self.audio_files = queue.Queue()
         self.play_thread = threading.Thread(target=self.play_sequentially)
         self.play_thread.daemon = True
         self.play_thread.start()
+
+        self.tts_lock = threading.Lock()
 
     def text_to_speech(self, text):
         # Synthesize speech from the text
@@ -53,7 +56,7 @@ class AudioOutput:
         filename = f"temp_audio_{int(time.time())}.wav"
         with open(filename, 'wb') as out:
             out.write(response.audio_content)
-        self.audio_files.put(filename)
+        return filename
     
     def add_to_queue(self, text):
         self.request_queue.put(text)
@@ -61,13 +64,16 @@ class AudioOutput:
     def process_queue(self):
         while True:
             text = self.request_queue.get()
-            self.text_to_speech(text)
-            self.request_queue.task_done()
+            with self.tts_lock:
+                filename = self.text_to_speech(text)
+                if filename:
+                    self.ready_files.put(filename)
+                self.request_queue.task_done()
     
     def play_sequentially(self):
         while True:
-            if not self.is_playing() and not self.audio_files.empty():
-                filename = self.audio_files.get()
+            if not self.is_playing() and not self.ready_files.empty():
+                filename = self.ready_files.get()
 
                 # Check if the file exists and retry a few times if it doesn't
                 for _ in range(3):  # retry up to 3 times
@@ -104,13 +110,13 @@ class AudioOutput:
         self.clear_queue()
 
     def clear_audio_files_queue(self):
-        while not self.audio_files.empty():
-            filename = self.audio_files.get()
+        while not self.ready_files.empty():
+            filename = self.ready_files.get()
             try:
                 os.remove(filename)
             except OSError as e:
                 print(f"Error removing file {filename}: {e}")
-            self.audio_files.task_done()
+            self.ready_files.task_done()
 
     def clear_queue(self):
         while not self.request_queue.empty():
