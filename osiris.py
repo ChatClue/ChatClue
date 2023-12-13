@@ -5,6 +5,7 @@ from celery_config import get_celery_app
 from database.setup import DatabaseSetup
 from audio.audio_processor import AudioProcessor
 from audio.audio_out import get_audio_out
+from utils.os.helpers import OSHelper
 import logging
 import subprocess
 import atexit
@@ -78,6 +79,7 @@ def main():
             logging.info("ROBOT THOUGHT: Terminating subconscious systems")
             celery_worker.terminate()
         audio_out.stop_all_audio()
+        OSHelper.system_file_cleanup()
 
 # Standard Python idiom for running the main function
 if __name__ == "__main__":
