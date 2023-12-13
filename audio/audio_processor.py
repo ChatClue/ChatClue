@@ -64,9 +64,7 @@ class AudioProcessor:
             bool: True if the input should be processed, False otherwise.
         """
         return (not contains_quiet_please_phrase(result) and contains_wake_phrase(result)) or \
-               (not contains_quiet_please_phrase(result) and \
-               (current_time - self.last_wake_time <= 10) or \
-               (current_time - self.last_response_end_time <= 10))
+               (not contains_quiet_please_phrase(result) and (current_time - self.last_wake_time <= 10) or (current_time - self.last_response_end_time <= 10) and not self.audio_out.is_playing)  \
 
     def update_wake_time(self):
         """Updates the time when a wake phrase was last heard."""

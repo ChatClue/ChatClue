@@ -10,7 +10,7 @@ AUDIO_SETTINGS = {
         "speechless", "sshh", "stay mum", "stifle your speech", "stop", "stop babbling", 
         "stop blabbering", "stop talking", "tone it down"
     ],
-    "WAKE_PHRASES": ["robot"],
+    "WAKE_PHRASES": ["robot", "computer"],
     "SOUND_DEVICE_SAMPLERATE": 48000,
     "AUDIO_IN_DUMP_FILENAME": "output.wav",
     "VOSK_MODEL": "en-us",
