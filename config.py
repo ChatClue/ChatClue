@@ -1,4 +1,6 @@
 AUDIO_SETTINGS = {
+    # List of phrases that, when detected, indicate a request for quiet or silence.
+    # These phrases are used by the system to recognize when it should stop speaking or reduce noise.
     "QUIET_PLEASE_PHRASES": [
         "be noiseless", "button it", "calm your voice", "cease speaking", 
         "cease your chatter", "close your mouth", "cut it out", "don't speak", 
@@ -10,48 +12,160 @@ AUDIO_SETTINGS = {
         "speechless", "sshh", "stay mum", "stifle your speech", "stop", "stop babbling", 
         "stop blabbering", "stop please", "stop talking", "tone it down"
     ],
+    # List of wake words or phrases used to activate the robot or system.
+    # These are keywords the system listens for to start processing voice commands.
     "WAKE_PHRASES": ["robot", "computer"],
+
+    # The sample rate for audio input. This is the number of samples of audio carried per second.
+    # Higher sample rates can provide better quality but require more processing power.
     "SOUND_DEVICE_SAMPLERATE": 48000,
+
+    # Filename for dumping audio input. Useful for debugging or processing audio data offline.
     "AUDIO_IN_DUMP_FILENAME": "output.wav",
+
+    # The language model used for speech recognition (e.g., English US).
     "VOSK_MODEL": "en-us",
+
+    # The block size for audio processing. Determines how much audio data is processed at once.
     "SOUND_DEVICE_BLOCK_SIZE": 28000,
+
+    # The name of the sound input device to be used. 'default' uses the system's default device.
     "SOUND_DEVICE_DEVICE": "default"
 }
 
 OPENAI_SETTINGS = {
-    #"api_key": "sk-<your-openai-api-key>", # Optional. An OPENAI_API_KEY environment variable is also supported.
-    "model": "gpt-3.5-turbo", #"gpt-4-1106-preview",
+    # OpenAI API key for accessing GPT models. Uncomment and set your key here if not using an environment variable.
+    #"api_key": "sk-<your-openai-api-key>",
+
+    # The specific model of GPT to use for generating responses (e.g., 'gpt-3.5-turbo').
+    "model": "gpt-3.5-turbo",
+
+    # Model used for embedding text into a numerical format, useful in certain applications like semantic search.
     "embedding_model": "text-embedding-ada-002",
+
+    # Maximum number of tokens (words) that can be used in the context for the GPT model.
     "max_context_tokens": 2500,
-    "initial_system_message": "You are a friendly, but not obsequious, robot assistant that provides all output in SSML format that closely conveys the intonations and emotion that you might guess a human would have speaking the same words. This output will then be used by a TTS system.", #Optional.
+
+    # Initial message or instruction to the GPT model, setting the tone and context for the interaction.
+    "initial_system_message": "You are a friendly, but not obsequious, robot assistant."
 }
 
 DATABASE_CONFIG = {
+    # Name of the database to be used for storing conversations and other data.
     'dbname': 'conversations',
+
+    # Username for the database. Typically 'postgres' for PostgreSQL databases.
     'user': 'postgres',
+
+    # Password for the database user. Keep this secure.
     'password': '',
-    'host': 'localhost',  
-    'port': '5432'  
+
+    # Host address for the database. 'localhost' refers to the local machine.
+    'host': 'localhost',
+
+    # Port number for connecting to the database.
+    'port': '5432'
 }
 
+
 CONVERSATIONS_CONFIG = {
+    # Identifier for user in the conversation database.
     "user": 1,
+
+    # Identifier for the assistant (robot or AI) in the conversation database.
     "assistant": 2
 }
 
 CELERY_CONFIG = {
-    "RUN_LOCALLY_AUTOMATICALLY": True, # Set to False if you want to start celery manually `celery -A osiris.celery_app worker --loglevel=info` or if celery is running separately. True is best for development enviornments.
-    "LOCAL_LOG_LEVEL": "info", # Set to "debug" for more verbose logging.
+    # Determines whether to run Celery locally and automatically. 
+    # Set to False for manual start or in production environments. True is preferable for development.
+    # Manual starts can be achieved by running the following command in the terminal:
+    # - celery -A osiris.celery_app worker --loglevel=info
+    "RUN_LOCALLY_AUTOMATICALLY": True,
+
+    # Logging level for Celery. Use "debug" for more verbose output, helpful in development.
+    "LOCAL_LOG_LEVEL": "info",
+
+    # The name of the application using Celery.
     "APPLICATION_NAME": "osiris",
+
+    # URL for the Celery broker, specifying the transport and location. Here, Redis is used as the broker.
     "BROKER_URL": 'redis://localhost:6379/0'
 }
 
+
+TTS_CONFIG = {
+    # Specifies the adapter class to be used for text-to-speech (TTS) functionality.
+    # The value should be a string representing the module and class name of the TTS adapter.
+    # Example: "audio.adapters.gtts.GTTSAdapter" for using Google Text-to-Speech.
+    #
+    # Currently available adapters (defined in audio/tts_adapters)):
+    #  - audio.tts_adapters.gtts.GTTSAdapter
+    #  - audio.tts_adapters.pyttsx3.Pyttsx3Adapter
+    #
+    # Note: The Pyttsx3Adapter processes requests offline and does not require an API key.
+    #
+    # Additional Adapters: Please feel free to add your own adapter classes to the audio/tts_adapters 
+    #                      directory for your own TTS service / models. 
+
+    # "tts_adapter": "audio.tts_adapters.gtts.GTTSAdapter",
+    "tts_adapter": "audio.tts_adapters.pyttsx3.Pyttsx3Adapter",
+}
+
+# Optional audio.tts_adapters.gtts.GTTSAdapter configuration.
 GOOGLE_TTS_CONFIG = {
-    #'api_key_path': 'path/to/api_key.json',  # Optional. Assumes you are not using the GOOGLE_APPLICATION_CREDENTIALS environment variable. Path to the JSON file containing your Google Cloud API key
-    'voice_model': 'en-US-Wavenet-D',  # Optional. Voice model to use (e.g., 'en-US-Wavenet-D')
-    'language_code': 'en-US',  # Optional. Language code (e.g., 'en-US' for American English)
-    'speaking_rate': 1.0,  # Optional. Default Speaking rate, 1.0 is normal, can range between 0.25 and 4.0. Robot may change this dynamically depending on the context of the conversation.
-    'pitch': 0,  # Optional. Pitch, can range from -20.0 to 20.0, 0 is the default pitch. Robot can modify.
-    'volume_gain_db': 0,  # Optional. Volume gain in dB, can range from -96.0 to 16.0, 0 is the default. Robot can modify.
-    'audio_encoding': 'LINEAR16',  # Optional. The audio encoding of the output file (e.g., 'LINEAR16', 'MP3', 'OGG_OPUS')
+    # Optional. Path to the JSON file containing your Google Cloud API key.
+    # Uncomment and provide the path if you are not using the GOOGLE_APPLICATION_CREDENTIALS environment variable.
+    #'api_key_path': 'path/to/api_key.json',
+
+    # Optional. Specifies the voice model to be used for speech synthesis.
+    # Example: 'en-US-Wavenet-D' for a specific English (US) voice model.
+    'voice_model': 'en-US-Wavenet-D',
+
+    # Optional. Language code for the TTS engine.
+    # Example: 'en-US' for American English. This should match with the selected voice model.
+    'language_code': 'en-US',
+
+    # Optional. Default speaking rate for the synthesized speech.
+    # 1.0 represents a normal speaking rate. Range: 0.25 (slow) to 4.0 (fast).
+    # The robot may adjust this dynamically depending on the context of the conversation.
+    'speaking_rate': 1.0,
+
+    # Optional. Pitch adjustment for the synthesized speech.
+    # Range: -20.0 (lower pitch) to 20.0 (higher pitch). 0 is the default pitch.
+    # The robot can modify this value dynamically if needed.
+    'pitch': 0,
+
+    # Optional. Volume gain for the synthesized speech in decibels (dB).
+    # Range: -96.0 (quieter) to 16.0 (louder), with 0 being the default level.
+    # The robot can modify this value dynamically based on the environment or context.
+    'volume_gain_db': 0,
+
+    # Optional. Specifies the audio encoding of the output file.
+    # Options include 'LINEAR16' (uncompressed PCM audio), 'MP3', and 'OGG_OPUS'.
+    # The choice of encoding affects the quality and size of the output audio file.
+    'audio_encoding': 'LINEAR16',
+}
+
+# Optional audio.tts_adapters.pyttsx3.Pyttsx3Adapter configuration.
+# Learn more about Pyttsx3 configuration options: https://github.com/nateshmbhat/pyttsx3
+PYTTSX3_TTS_CONFIG = {
+    # "rate": Controls the speaking rate of the synthesized speech.
+    # The value is in words per minute. Default is typically around 200 wpm.
+    "rate": 175,
+
+    # "volume": Sets the volume for the synthesized speech.
+    # The value ranges from 0.0 (silent) to 1.0 (maximum volume).
+    # Example: 1.0 for maximum volume.
+    "volume": 1.0,
+
+    # "voice": Specifies the voice ID to be used for speech synthesis.
+    # The available voices can depend on the system and pyttsx3 installation.
+    # Example: 'voices[0].id' for a default male voice, 'voices[1].id' for a default female voice.
+    # Note: You might need to enumerate the available voices on your system to find specific voice IDs.
+    "voice": "default",
+
+    # Optional. File path to save audio output, used by `engine.save_to_file`.
+    # Example: 'test.mp3' to save output to a file named 'test.mp3'.
+    "output_file_path": "test.mp3"
 }
