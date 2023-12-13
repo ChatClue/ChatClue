@@ -5,7 +5,7 @@ import threading
 import time
 import sounddevice as sd
 from vosk import KaldiRecognizer
-from .audio_out import AudioOutput
+from .audio_out import get_audio_out
 from integrations.openai import OpenAIClient
 from integrations.openai_conversation_builder import OpenAIConversationBuilder
 from utils.audio_helpers import contains_quiet_please_phrase, contains_wake_phrase
@@ -36,7 +36,7 @@ class AudioProcessor:
         self.openai_client = OpenAIClient()
         self.conversation_memory_manager = ConversationMemoryManager()
         self.openai_conversation_builder = OpenAIConversationBuilder()
-        self.audio_out = AudioOutput()
+        self.audio_out = get_audio_out()
         self.audio_out_response_buffer = ''
         self.full_assistant_response = ''
         self.last_wake_time = 0

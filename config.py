@@ -20,9 +20,9 @@ AUDIO_SETTINGS = {
 
 OPENAI_SETTINGS = {
     #"api_key": "sk-<your-openai-api-key>", # Optional. An OPENAI_API_KEY environment variable is also supported.
-    "model": "gpt-4-1106-preview",
+    "model": "gpt-3.5-turbo", #"gpt-4-1106-preview",
     "embedding_model": "text-embedding-ada-002",
-    "max_context_tokens": 16000,
+    "max_context_tokens": 2500,
     "initial_system_message": "You are a friendly, but not obsequious, robot assistant that provides all output in SSML format that closely conveys the intonations and emotion that you might guess a human would have speaking the same words. This output will then be used by a TTS system.", #Optional.
 }
 
@@ -48,7 +48,7 @@ CELERY_CONFIG = {
 
 GOOGLE_TTS_CONFIG = {
     #'api_key_path': 'path/to/api_key.json',  # Optional. Assumes you are not using the GOOGLE_APPLICATION_CREDENTIALS environment variable. Path to the JSON file containing your Google Cloud API key
-    'voice_model': 'en-US-Wavenet-D',  # Optional. Voice model to use (e.g., 'en-US-Wavenet-D')
+    'voice_model': 'en-US-Wavenet-F',  # Optional. Voice model to use (e.g., 'en-US-Wavenet-D')
     'language_code': 'en-US',  # Optional. Language code (e.g., 'en-US' for American English)
     'speaking_rate': 1.0,  # Optional. Default Speaking rate, 1.0 is normal, can range between 0.25 and 4.0. Robot may change this dynamically depending on the context of the conversation.
     'pitch': 0,  # Optional. Pitch, can range from -20.0 to 20.0, 0 is the default pitch. Robot can modify.

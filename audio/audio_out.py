@@ -68,7 +68,17 @@ class AudioOutput:
         while True:
             if not self.is_playing() and not self.audio_files.empty():
                 filename = self.audio_files.get()
-                self.play_audio_file(filename)
+
+                # Check if the file exists and retry a few times if it doesn't
+                for _ in range(3):  # retry up to 3 times
+                    if os.path.exists(filename):
+                        self.play_audio_file(filename)
+                        break
+                    time.sleep(0.1)  # wait for 100 milliseconds before retrying
+
+                # Remove the file after playing
+                if os.path.exists(filename):
+                    os.remove(filename)
 
     def is_playing(self):
         return pygame.mixer.music.get_busy()
@@ -109,3 +119,8 @@ class AudioOutput:
                 self.request_queue.task_done()
             except queue.Empty:
                 break
+
+audio_out = AudioOutput()
+
+def get_audio_out():
+    return audio_out
