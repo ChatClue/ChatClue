@@ -35,5 +35,5 @@ class OpenAIConversationBuilder:
                 "content": conversation.response
             })
         messages.append({'role': 'user', 'content': latest_conversation_part})
-
+        logging.info(f"ROBOT THOUGHT: Recent conversations formatted for OpenAI: {messages}")
         return messages
