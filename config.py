@@ -8,7 +8,7 @@ AUDIO_SETTINGS = {
         "not another word", "please stop", "put a lid on it", "quiet", "quietude", 
         "shh", "shhh", "shut up", "silence", "silence yourself", "silence your lips", 
         "speechless", "sshh", "stay mum", "stifle your speech", "stop", "stop babbling", 
-        "stop blabbering", "stop talking", "tone it down"
+        "stop blabbering", "stop please", "stop talking", "tone it down"
     ],
     "WAKE_PHRASES": ["robot", "computer"],
     "SOUND_DEVICE_SAMPLERATE": 48000,
