@@ -48,10 +48,7 @@ install_postgresql_mac() {
 install_pg_vector_mac() {
     # Clone and build pgvector
     echo "Installing PGVector for macOS..."
-    git clone https://github.com/pgvector/pgvector.git
-    cd pgvector
-    make
-    sudo make install
+    brew install pgvector
     pip install pgvector
     cd ..
     echo "PGVector has been installed for macOS."
@@ -81,9 +78,13 @@ pip install sounddevice
 pip3 install tiktoken
 pip install google-cloud-texttospeech
 pip install pyttsx3
+if [ "$OS_TYPE" = "Darwin" ]; then
+    pip3 install pyobjc==9.0.1
+fi
 pip install SQLAlchemy
 pip install psycopg2-binary
 pip install celery redis
+pip install openai
 
 # Install system-specific dependencies
 if [ "$OS_TYPE" = "Linux" ]; then
