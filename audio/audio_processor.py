@@ -26,7 +26,7 @@ class AudioProcessor:
         dump_filename (str): Filename to dump the audio input, if provided.
     """
 
-    def __init__(self, model, samplerate, device, blocksize, dump_filename=None):
+    def __init__(self, model, samplerate, device, blocksize, dump_filename=None, broadcaster=None):
         self.model = model
         self.samplerate = samplerate
         self.device = device
@@ -36,6 +36,7 @@ class AudioProcessor:
         self.openai_client = OpenAIClient()
         self.conversation_memory_manager = ConversationMemoryManager()
         self.openai_conversation_builder = OpenAIConversationBuilder()
+        self.broadcaster = broadcaster
         self.audio_out = get_audio_out()
         self.audio_out_response_buffer = ''
         self.full_assistant_response = ''
@@ -142,6 +143,7 @@ class AudioProcessor:
         if rec.AcceptWaveform(data):
             result = json.loads(rec.Result())["text"]
             if result not in ['', 'huh']:
+                self.broadcaster.send_message(result)
                 logging.info("ROBOT HEARD: " + result)
                 return result
         return None

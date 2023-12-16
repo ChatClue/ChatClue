@@ -108,8 +108,8 @@ TTS_CONFIG = {
     # Additional Adapters: Please feel free to add your own adapter classes to the audio/tts_adapters 
     #                      directory for your own TTS service / models. 
 
-    # "tts_adapter": "audio.tts_adapters.gtts.GTTSAdapter",
-    "tts_adapter": "audio.tts_adapters.pyttsx3.Pyttsx3Adapter",
+    "tts_adapter": "audio.tts_adapters.gtts.GTTSAdapter",
+    # "tts_adapter": "audio.tts_adapters.pyttsx3.Pyttsx3Adapter",
 }
 
 # Optional audio.tts_adapters.gtts.GTTSAdapter configuration.
@@ -168,4 +168,48 @@ PYTTSX3_TTS_CONFIG = {
     # Optional. File path to save audio output, used by `engine.save_to_file`.
     # Example: 'test.mp3' to save output to a file named 'test.mp3'.
     "output_file_path": "test.mp3"
+}
+
+# Configuration for WebsocketServer in broadcast/websocket_server.py
+# Eventually, additional broadcaster support, such as MQTT will be added.
+# You can add your own broadcaster by creating a new adapter in broadcast/adapters.
+BROADCAST_CONFIG = {
+    # The type of broadcaster to be used for sending messages to clients.
+    # Currently, only 'websocket' is supported.
+    "type": "websocket",
+
+    # The host address for the WebSocket server. 
+    # 'localhost' refers to the local machine where the server is running.
+    # This setting can be adjusted to a specific IP address or hostname if the server is accessible over a network.
+    "host": "localhost",
+
+    # The port number on which the WebSocket server will listen for incoming connections.
+    # Port 8765 is used as a default value. This can be changed to any available port as needed.
+    # Ensure that the selected port is not being used by other services and is open for network traffic if required.
+    "port": 8765,
+}
+
+BROADCAST_CONFIG = {
+    # Specifies the adapter class to be used for broadcasting functionality.
+    # The value should be a string representing the module and class name of the broadcast adapter.
+    # Example: "broadcast.adapters.websocket_server.WebSocketServer" for using WebSocket.
+    #
+    # Currently available adapters (defined in broadcast/adapters)):
+    #  - broadcast.adapters.websocket_server.WebSocketServer
+    #
+    # Note: Additional custom adapters can be added to the broadcast/adapter directory. Next planned broadcaster is MQTT.
+    "broadcast_adapter": "broadcast.adapters.websocket_server.WebSocketServer",
+}
+
+# broadcast.adapters.websocket_server.WebSocketServer configuration.
+BROADCAST_WEBSOCKET_CONFIG={
+    # The host address for the WebSocket server. 
+    # 'localhost' refers to the local machine where the server is running.
+    # This setting can be adjusted to a specific IP address or hostname if the server is accessible over a network.
+    "websocket_host": "localhost",
+
+    # The port number on which the WebSocket server will listen for incoming connections.
+    # Port 8765 is used as a default value. This can be changed to any available port as needed.
+    # Ensure that the selected port is not being used by other services and is open for network traffic if required.
+    "websocket_port": 8765,
 }
