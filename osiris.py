@@ -3,9 +3,11 @@ from vosk import Model
 from celery import Celery
 from celery_config import get_celery_app
 from database.setup import DatabaseSetup
+from broadcast.broadcaster import Broadcaster
 from audio.audio_processor import AudioProcessor
 from audio.audio_out import get_audio_out
 from utils.os.helpers import OSHelper
+from utils.text.welcome import welcome_message
 import logging
 import subprocess
 import atexit
@@ -45,9 +47,10 @@ def start_celery_worker():
 
 def main():
     """
-    Main function to initiate the audio processing.
-    Retrieves audio settings from the configuration and initializes the AudioProcessor.
+    Main function to initialize the application.
+    Configures celery background worker, database, broadcaster, and audio settings.
     """
+    welcome_message()
     # Optionally start Celery worker
     celery_worker = None
     if CELERY_CONFIG.get("RUN_LOCALLY_AUTOMATICALLY", True):
@@ -57,6 +60,12 @@ def main():
 
     # Setup the database
     DatabaseSetup.initial_setup()
+
+    # Start the broadcaster
+    logging.info("ROBOT THOUGHT: Starting broadcaster / hivemind")
+    broadcaster = Broadcaster()
+    broadcaster.start()
+    logging.info("ROBOT THOUGHT: Hivemind activated")
 
     # Retrieve audio settings from the configuration file
     sound_device_samplerate = AUDIO_SETTINGS.get('SOUND_DEVICE_SAMPLERATE')
@@ -68,7 +77,7 @@ def main():
     try: 
         # Initialize the audio processor with the configuration settings
         logging.info("ROBOT THOUGHT: I am ready to begin.")
-        audio_processor = AudioProcessor(vosk_model, sound_device_samplerate, sound_device_device, sound_device_blocksize, audio_in_dump_filename)
+        audio_processor = AudioProcessor(vosk_model, sound_device_samplerate, sound_device_device, sound_device_blocksize, audio_in_dump_filename, broadcaster)
         # Start processing the audio stream
         audio_processor.process_stream()
     except KeyboardInterrupt:
@@ -76,10 +85,19 @@ def main():
         logging.info("\nDone")
     finally:
         if celery_worker:
-            logging.info("ROBOT THOUGHT: Terminating subconscious systems")
+            logging.info("Terminating Celery worker")
             celery_worker.terminate()
-        audio_out.stop_all_audio()
+        
+        logging.info("Shutting down audio output")
+        audio_out.shutdown()
+        
+        logging.info("Shutting down broadcaster")
+        broadcaster.shutdown()
+
+        logging.info("Performing final cleanup")
         OSHelper.system_file_cleanup()
+
+        logging.info("Application shutdown complete")
 
 # Standard Python idiom for running the main function
 if __name__ == "__main__":
