@@ -6,8 +6,8 @@ import time
 import sounddevice as sd
 from vosk import KaldiRecognizer
 from .audio_out import get_audio_out
-from integrations.openai import OpenAIClient
-from integrations.openai_conversation_builder import OpenAIConversationBuilder
+from integrations.openai.openai import OpenAIClient
+from integrations.openai.openai_conversation_builder import OpenAIConversationBuilder
 from utils.audio.helpers import contains_quiet_please_phrase, contains_wake_phrase
 from background.memory.tasks import store_conversation_task
 from database.conversations import ConversationMemoryManager
