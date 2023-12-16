@@ -170,25 +170,6 @@ PYTTSX3_TTS_CONFIG = {
     "output_file_path": "test.mp3"
 }
 
-# Configuration for WebsocketServer in broadcast/websocket_server.py
-# Eventually, additional broadcaster support, such as MQTT will be added.
-# You can add your own broadcaster by creating a new adapter in broadcast/adapters.
-BROADCAST_CONFIG = {
-    # The type of broadcaster to be used for sending messages to clients.
-    # Currently, only 'websocket' is supported.
-    "type": "websocket",
-
-    # The host address for the WebSocket server. 
-    # 'localhost' refers to the local machine where the server is running.
-    # This setting can be adjusted to a specific IP address or hostname if the server is accessible over a network.
-    "host": "localhost",
-
-    # The port number on which the WebSocket server will listen for incoming connections.
-    # Port 8765 is used as a default value. This can be changed to any available port as needed.
-    # Ensure that the selected port is not being used by other services and is open for network traffic if required.
-    "port": 8765,
-}
-
 BROADCAST_CONFIG = {
     # Specifies the adapter class to be used for broadcasting functionality.
     # The value should be a string representing the module and class name of the broadcast adapter.
