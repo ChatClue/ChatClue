@@ -25,6 +25,8 @@ class AudioOutput:
         tts_adapter_class = getattr(tts_module, tts_class_name)
         self.tts_adapter = tts_adapter_class()  # Instantiate the TTS adapter
 
+        self.running = True
+
         # Initialize pygame for playing audio
         pygame.init()
         pygame.mixer.init() 
@@ -72,7 +74,7 @@ class AudioOutput:
         """
         Continuously processes items from the request queue, converting them to speech.
         """
-        while True:
+        while self.running:
             text = self.request_queue.get()
             with self.tts_lock:
                 filename = self.text_to_speech(text)
@@ -83,7 +85,7 @@ class AudioOutput:
         """
         Continuously plays audio files from the ready files queue, sequentially.
         """
-        while True:
+        while self.running:
             if not self.is_playing() and not self.ready_files.empty():
                 filename = self.ready_files.get()
                 with self.play_lock:
@@ -152,6 +154,11 @@ class AudioOutput:
                 self.ready_files.task_done()
             except queue.Empty:
                 break
+    
+    def shutdown(self):
+        self.stop_all_audio()
+        # Signal the threads to stop running
+        self.running = False
 
 audio_out = AudioOutput()
 

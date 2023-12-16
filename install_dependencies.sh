@@ -27,7 +27,7 @@ install_pg_vector_linux() {
     cd pgvector
     make
     sudo make install
-    pip install pgvector
+    pip3 install pgvector
     cd ..
     echo "PGVector have been installed."
 }
@@ -52,7 +52,7 @@ install_pg_vector_mac() {
     cd pgvector
     make
     sudo make install
-    pip install pgvector
+    pip3 install pgvector
     cd ..
     echo "PGVector has been installed for macOS."
 }
@@ -77,13 +77,15 @@ install_redis_mac() {
 # Install core dependencies
 echo "Installing core dependencies..."
 pip3 -v install vosk
-pip install sounddevice
+pip3 install sounddevice
 pip3 install tiktoken
-pip install google-cloud-texttospeech
-pip install pyttsx3
-pip install SQLAlchemy
-pip install psycopg2-binary
-pip install celery redis
+pip3 install google-cloud-texttospeech
+pip3 install pyttsx3
+pip3 install SQLAlchemy
+pip3 install psycopg2-binary
+pip3 install celery redis
+pip3 install asyncio
+pip3 install websockets
 
 # Install system-specific dependencies
 if [ "$OS_TYPE" = "Linux" ]; then
