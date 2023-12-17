@@ -38,7 +38,7 @@ OPENAI_SETTINGS = {
     #"api_key": "sk-<your-openai-api-key>",
 
     # The specific model of GPT to use for generating responses (e.g., 'gpt-3.5-turbo').
-    "model": "gpt-3.5-turbo",
+    "model": "gpt-4-1106-preview",
 
     # Model used for embedding text into a numerical format, useful in certain applications like semantic search.
     "embedding_model": "text-embedding-ada-002",

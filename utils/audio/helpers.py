@@ -1,4 +1,5 @@
 from config import AUDIO_SETTINGS
+from decorators.openai_decorators import openai_function
 
 def contains_quiet_please_phrase(input_string):
     """
@@ -23,3 +24,22 @@ def contains_wake_phrase(input_string):
         bool: True if any wake phrase is found in the input string, False otherwise.
     """
     return any(phrase in input_string for phrase in AUDIO_SETTINGS['WAKE_PHRASES'])
+
+@openai_function
+def check_the_weather(city):
+    """
+    {
+        "description": "checks the weather for a given city",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "city": {
+                    "type": "string",
+                    "description": "the city to check the weather for"
+                }
+            },
+            "required": ["city"]
+        }
+    }
+    """
+    return "nice weather"

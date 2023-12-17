@@ -2,6 +2,7 @@ import queue
 import threading
 import logging
 import tiktoken
+from decorators.openai_decorators import openai_functions
 from config import OPENAI_SETTINGS
 from openai import OpenAI, OpenAIError
 
@@ -35,7 +36,7 @@ class OpenAIClient:
         self.embedding_model = OPENAI_SETTINGS.get('embedding_model', "text-embedding-ada-002")
         self.streaming_complete = False
 
-    def create_completion(self, recent_messages):
+    def create_completion(self, recent_messages, streaming=True, response_format=None, tools=None):
         """
         Creates a completion request to the OpenAI API based on recognized text.
 
@@ -49,8 +50,10 @@ class OpenAIClient:
             response = self.client.chat.completions.create(
                 model=self.model,
                 messages=recent_messages,
+                tools=tools,
                 temperature=0,
-                stream=True
+                stream=streaming,
+                response_format=response_format
             )
             return response
         except OpenAIError as e:

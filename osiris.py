@@ -12,6 +12,8 @@ import logging
 import subprocess
 import atexit
 
+from decorators.openai_decorators import openai_functions
+
 # Configure basic logging for the application
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
@@ -73,6 +75,14 @@ def main():
     sound_device_device = AUDIO_SETTINGS.get('SOUND_DEVICE_DEVICE')
     sound_device_blocksize = AUDIO_SETTINGS.get('SOUND_DEVICE_BLOCK_SIZE', 28000)
     audio_in_dump_filename = AUDIO_SETTINGS.get('AUDIO_IN_DUMP_FILENAME')
+
+    print("#"*90)
+    print("#"*90)
+    print("#"*90)
+    print(openai_functions)
+    print("#"*90)
+    print("#"*90)
+    print("#"*90)
 
     try: 
         # Initialize the audio processor with the configuration settings

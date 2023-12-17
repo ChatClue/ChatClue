@@ -113,8 +113,8 @@ class AudioProcessor:
                     self.write_to_dump_file(data)
                     self.process_openai_response()
 
-        except Exception as e:
-            logging.error(f"An error occurred: {e}")
+        # except Exception as e:
+        #     logging.error(f"An error occurred: {e}")
         finally:
             self.close_dump_file()
 
@@ -164,6 +164,18 @@ class AudioProcessor:
             self.update_wake_time()
             if not openai_stream_thread or not openai_stream_thread.is_alive():
                 self.openai_client.stop_signal.clear()
+                # First, let's determine if this is likely to be a request that requires a function/tool to run or if it is just part of a conversation.
+                call_type_messages = self.openai_conversation_builder.create_check_if_tool_call_messages(result)
+                print(call_type_messages)
+                rr = self.openai_client.create_completion(call_type_messages, False, {"type": "json_object"})
+                # parse
+                print("B"*90)
+                print("B"*90)
+                print("B"*90)
+                print(rr.choices[0].message.content)
+                # print(result.choices[0].message.content)
+
+                    
                 conversation = self.openai_conversation_builder.create_recent_conversation_messages_array(result)
                 openai_stream_thread = threading.Thread(target=self.openai_client.stream_response, args=(conversation,))
                 openai_stream_thread.start()
