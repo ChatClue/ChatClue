@@ -1,4 +1,4 @@
-from integrations.openai import OpenAIClient
+from integrations.openai.openai import OpenAIClient
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.sql import func
 from .models import Conversation, Base

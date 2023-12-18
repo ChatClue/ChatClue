@@ -3,14 +3,17 @@ from vosk import Model
 from celery import Celery
 from celery_config import get_celery_app
 from database.setup import DatabaseSetup
-from broadcast.broadcaster import Broadcaster
+from broadcast.broadcaster import get_broadcaster
 from audio.audio_processor import AudioProcessor
 from audio.audio_out import get_audio_out
 from utils.os.helpers import OSHelper
 from utils.text.welcome import welcome_message
+from tools import * # Import all openai tool functions
 import logging
 import subprocess
 import atexit
+
+from decorators.openai_decorators import openai_functions
 
 # Configure basic logging for the application
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -20,6 +23,9 @@ celery_app = get_celery_app()
 
 # Configure audio output
 audio_out = get_audio_out()
+
+# Configure broadcaster
+broadcaster = get_broadcaster()
 
 def start_celery_worker():
     """
@@ -60,12 +66,6 @@ def main():
 
     # Setup the database
     DatabaseSetup.initial_setup()
-
-    # Start the broadcaster
-    logging.info("ROBOT THOUGHT: Starting broadcaster / hivemind")
-    broadcaster = Broadcaster()
-    broadcaster.start()
-    logging.info("ROBOT THOUGHT: Hivemind activated")
 
     # Retrieve audio settings from the configuration file
     sound_device_samplerate = AUDIO_SETTINGS.get('SOUND_DEVICE_SAMPLERATE')
