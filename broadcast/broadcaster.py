@@ -54,3 +54,9 @@ class Broadcaster:
         """
         if hasattr(self.adapter, 'shutdown'):
             self.adapter.shutdown()
+
+broadcaster = Broadcaster()
+broadcaster.start()
+
+def get_broadcaster():
+    return broadcaster
