@@ -3,7 +3,7 @@ from vosk import Model
 from celery import Celery
 from celery_config import get_celery_app
 from database.setup import DatabaseSetup
-from broadcast.broadcaster import broadcaster
+from broadcast.broadcaster import get_broadcaster
 from audio.audio_processor import AudioProcessor
 from audio.audio_out import get_audio_out
 from utils.os.helpers import OSHelper
@@ -23,6 +23,9 @@ celery_app = get_celery_app()
 
 # Configure audio output
 audio_out = get_audio_out()
+
+# Configure broadcaster
+broadcaster = get_broadcaster()
 
 def start_celery_worker():
     """

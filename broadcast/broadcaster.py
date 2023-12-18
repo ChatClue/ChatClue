@@ -21,3 +21,6 @@ class Broadcaster:
 
 broadcaster = Broadcaster()
 broadcaster.start()
+
+def get_broadcaster():
+    return broadcaster
