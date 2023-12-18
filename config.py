@@ -203,7 +203,7 @@ BROADCAST_WEBSOCKET_CONFIG={
     # The host address for the WebSocket server. 
     # 'localhost' refers to the local machine where the server is running.
     # This setting can be adjusted to a specific IP address or hostname if the server is accessible over a network.
-    "websocket_host": "localhost",
+    "websocket_host": "192.168.86.38",
 
     # The port number on which the WebSocket server will listen for incoming connections.
     # Port 8765 is used as a default value. This can be changed to any available port as needed.
