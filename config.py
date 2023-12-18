@@ -14,7 +14,7 @@ AUDIO_SETTINGS = {
     ],
     # List of wake words or phrases used to activate the robot or system.
     # These are keywords the system listens for to start processing voice commands.
-    "WAKE_PHRASES": ["robot", "computer"],
+    "WAKE_PHRASES": ["robot", "computer", "osiris"],
 
     # List of phrases that will be used to let the user know that a specific tool or piece of information
     # Could not be retrieved.  This is specifically in relation to functionality associated with the 
