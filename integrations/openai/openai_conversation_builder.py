@@ -39,18 +39,36 @@ class OpenAIConversationBuilder:
         logging.info(f"ROBOT THOUGHT: Recent conversations formatted for OpenAI: {messages}")
         return messages
 
-    def create_check_if_tool_call_messages(self,result):
+    def create_check_if_tool_call_messages(self, result):
+        """
+        Creates a conversation array to check if the latest user input might require a tool function call.
+
+        Args:
+            result (str): The latest part of the conversation input by the user.
+
+        Returns:
+            List[dict]: A list of message dictionaries formatted for the OpenAI API,
+                        including a system message to determine if the conversation requires a tool call.
+        """
         messages = self.create_recent_conversation_messages_array(result, overwrite_context_buffer=True, context_buffer=100)
-        messages.append({'role': 'system', 'content': 'Based on the previous messages, if the conversation seems to require a function or tool to be called to provide an answer, then in JSON format, please provide true or false for the following key: is_tool. This will inform our next calls'})
+        tool_check_message = "Based on the previous messages, if the conversation seems to require a function or tool to be called to provide an answer, then in JSON format, please provide true or false for the following key: is_tool. This will inform our next calls."
+        messages.append({'role': 'system', 'content': tool_check_message})
         return messages
 
-    # this method takes as an argument the value returned by the utils.openai.tool_processor.ToolProcessor.process_tool_request method, and returns a properly formatted 
-    # openai conversation part to include with subsequent conversations.
     def create_tool_call_response_message(self, tool_function_response):
+        """
+        Formats a response from a tool function call into a message dictionary for the OpenAI conversation array.
+
+        Args:
+            tool_function_response (dict): The response from a tool function call.
+
+        Returns:
+            dict: A formatted message dictionary representing the tool function call's response.
+        """
         response = {
             "tool_call_id": tool_function_response["tool_call_id"],
             "role": "tool",
             "name": tool_function_response["tool_name"],
             "content": tool_function_response["function_result"]
         }
-        return response 
+        return response
