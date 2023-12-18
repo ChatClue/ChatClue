@@ -1,4 +1,5 @@
 from picarx import Picarx
+import threading
 
 class PiCarXMovements:
     def __init__(self):
