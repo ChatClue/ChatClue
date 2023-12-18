@@ -168,8 +168,19 @@ class AudioProcessor:
     def determine_tool_request(self, result):
         call_type_messages = self.openai_conversation_builder.create_check_if_tool_call_messages(result)
         openai_is_tool_response = self.openai_client.create_completion(call_type_messages, False, {"type": "json_object"}, openai_functions)
-        is_tool_request = json.loads(openai_is_tool_response.choices[0].message.content).get("is_tool", False)
+        
+        # Initialize as False in case of exceptions
+        is_tool_request = False
         conversation = self.openai_conversation_builder.create_recent_conversation_messages_array(result)
+
+        try:
+            # Attempt to parse the response and determine if it's a tool request
+            if openai_is_tool_response and openai_is_tool_response.choices:
+                is_tool_request = json.loads(openai_is_tool_response.choices[0].message.content).get("is_tool", False)
+        except (TypeError, AttributeError, json.JSONDecodeError):
+            # Log the error or handle it as needed
+            print("Error parsing OpenAI response or response not in expected format.")
+
         return is_tool_request, conversation
 
     def handle_tool_request(self, result, conversation):

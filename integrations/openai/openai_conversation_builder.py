@@ -40,7 +40,7 @@ class OpenAIConversationBuilder:
         return messages
 
     def create_check_if_tool_call_messages(self,result):
-        messages = self.create_recent_conversation_messages_array(result, overwrite_context_buffer=True, context_buffer=0)
+        messages = self.create_recent_conversation_messages_array(result, overwrite_context_buffer=True, context_buffer=100)
         messages.append({'role': 'system', 'content': 'Based on the previous messages, if the conversation seems to require a function or tool to be called to provide an answer, then in JSON format, please provide true or false for the following key: is_tool. This will inform our next calls'})
         return messages
 
