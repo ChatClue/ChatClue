@@ -11,7 +11,7 @@ class PiCarXMovements:
     def _set_timer(self):
         if self.move_timer is not None:
             self.move_timer.cancel()
-        self.move_timer = threading.Timer(0.5, self.stop)
+        self.move_timer = threading.Timer(1.5, self.stop)
         self.move_timer.start()
 
     def move_forward(self, speed):
