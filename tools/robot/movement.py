@@ -49,7 +49,7 @@ def turn_left(speed, angle):
     """
     {
         "description": "Turns the robot left at a given speed and angle.",
-        "is_conversational": true,
+        "is_conversational": false,
         "parameters": {
             "type": "object",
             "properties": {
