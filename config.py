@@ -124,8 +124,8 @@ TTS_CONFIG = {
     # Additional Adapters: Please feel free to add your own adapter classes to the audio/tts_adapters 
     #                      directory for your own TTS service / models. 
 
-    "tts_adapter": "audio.tts_adapters.gtts.GTTSAdapter",
-    # "tts_adapter": "audio.tts_adapters.pyttsx3.Pyttsx3Adapter",
+    # "tts_adapter": "audio.tts_adapters.gtts.GTTSAdapter",
+    "tts_adapter": "audio.tts_adapters.pyttsx3.Pyttsx3Adapter",
 }
 
 # Optional audio.tts_adapters.gtts.GTTSAdapter configuration.
