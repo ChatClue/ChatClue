@@ -55,7 +55,6 @@ class WebSocketServer:
                 await asyncio.wait([client.send(message) for client in self.connected_clients])
 
     def send_message(self, message):
-<<<<<<< HEAD
         """
         Puts a message in the queue to be broadcasted to clients.
 
@@ -63,16 +62,6 @@ class WebSocketServer:
             message: The message to be sent.
         """
         self.message_queue.put(message)
-=======
-        try:
-            # Try to serialize the message as JSON
-            serialized_message = json.dumps(message)
-        except TypeError:
-            # If not JSON, just send along the string representation
-            serialized_message = str(message)
-
-        self.message_queue.put(serialized_message)
->>>>>>> main
 
     def start_server(self):
         """
