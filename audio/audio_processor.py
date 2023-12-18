@@ -8,8 +8,10 @@ from vosk import KaldiRecognizer
 from .audio_out import get_audio_out
 from integrations.openai.openai import OpenAIClient
 from integrations.openai.openai_conversation_builder import OpenAIConversationBuilder
-from utils.audio.helpers import contains_quiet_please_phrase, contains_wake_phrase
+from utils.audio.helpers import contains_quiet_please_phrase, contains_wake_phrase, get_tool_not_found_phrase
 from background.memory.tasks import store_conversation_task
+from decorators.openai_decorators import openai_functions
+from utils.openai.tool_processor import ToolProcessor
 from database.conversations import ConversationMemoryManager
 from config import CONVERSATIONS_CONFIG
 
@@ -36,6 +38,7 @@ class AudioProcessor:
         self.openai_client = OpenAIClient()
         self.conversation_memory_manager = ConversationMemoryManager()
         self.openai_conversation_builder = OpenAIConversationBuilder()
+        self.tool_processor = ToolProcessor()
         self.broadcaster = broadcaster
         self.audio_out = get_audio_out()
         self.audio_out_response_buffer = ''
@@ -147,43 +150,120 @@ class AudioProcessor:
                 logging.info("ROBOT HEARD: " + result)
                 return result
         return None
-
+    
     def handle_speech(self, result, openai_stream_thread, current_time):
-        """
-        Handles recognized speech for processing.
-
-        Args:
-            result (str): Recognized speech text.
-            openai_stream_thread (threading.Thread): The current OpenAI stream thread.
-            current_time (float): Current time in seconds.
-
-        Returns:
-            threading.Thread: Updated or new OpenAI stream thread.
-        """
         if self.should_process(result, current_time):
             self.update_wake_time()
             if not openai_stream_thread or not openai_stream_thread.is_alive():
                 self.openai_client.stop_signal.clear()
-                # First, let's determine if this is likely to be a request that requires a function/tool to run or if it is just part of a conversation.
-                call_type_messages = self.openai_conversation_builder.create_check_if_tool_call_messages(result)
-                print(call_type_messages)
-                rr = self.openai_client.create_completion(call_type_messages, False, {"type": "json_object"})
-                # parse
-                print("B"*90)
-                print("B"*90)
-                print("B"*90)
-                print(rr.choices[0].message.content)
-                # print(result.choices[0].message.content)
-
-                    
-                conversation = self.openai_conversation_builder.create_recent_conversation_messages_array(result)
-                openai_stream_thread = threading.Thread(target=self.openai_client.stream_response, args=(conversation,))
-                openai_stream_thread.start()
-                logging.info("ROBOT ACTION: Committing user input to memory.")
-                self.store_conversation(speaker_type=CONVERSATIONS_CONFIG["user"], response=result)
+                is_tool_request, conversation = self.determine_tool_request(result)
+                if is_tool_request:
+                    self.handle_tool_request(result, conversation)
+                else:
+                    self.continue_conversation(result, conversation)
         else:
             logging.info("ROBOT THOUGHT: Ignoring Conversation, it doesn't appear to be relevant.")
         return openai_stream_thread
+    
+    def determine_tool_request(self, result):
+        call_type_messages = self.openai_conversation_builder.create_check_if_tool_call_messages(result)
+        openai_is_tool_response = self.openai_client.create_completion(call_type_messages, False, {"type": "json_object"}, openai_functions)
+        is_tool_request = json.loads(openai_is_tool_response.choices[0].message.content).get("is_tool", False)
+        conversation = self.openai_conversation_builder.create_recent_conversation_messages_array(result)
+        return is_tool_request, conversation
+
+    def handle_tool_request(self, result, conversation):
+        tool_response = self.openai_client.create_completion(conversation, False, None, openai_functions)
+        tool_response_message = tool_response.choices[0].message 
+        tool_calls = tool_response_message.tool_calls  
+        if tool_calls:
+            self.process_tool_calls(tool_calls, result, conversation, tool_response_message)
+        else:
+            self.continue_conversation(result, conversation)
+
+    def process_tool_calls(self, tool_calls, result, conversation, tool_response_message):
+        tool_call = tool_calls[0]
+        tool_processor_response = self.tool_processor.process_tool_request(tool_call)
+        if tool_processor_response["success"]:
+            self.handle_successful_tool_response(tool_processor_response, result, conversation, tool_response_message)
+        else:
+            self.audio_out.add_to_queue(get_tool_not_found_phrase())
+
+    def handle_successful_tool_response(self, tool_processor_response, result, conversation, tool_response_message):
+        if tool_processor_response["is_conversational"]:
+            conversation.append(tool_response_message)
+            tool_call_response_message = self.openai_conversation_builder.create_tool_call_response_message(tool_processor_response)
+            conversation.append(tool_call_response_message)
+            openai_stream_thread = threading.Thread(target=self.openai_client.stream_response, args=(conversation,))
+            openai_stream_thread.start()
+        else:
+            self.store_conversation(speaker_type=CONVERSATIONS_CONFIG["user"], response=result)
+
+
+    # def handle_speech(self, result, openai_stream_thread, current_time):
+    #     """
+    #     Handles recognized speech for processing.
+
+    #     Args:
+    #         result (str): Recognized speech text.
+    #         openai_stream_thread (threading.Thread): The current OpenAI stream thread.
+    #         current_time (float): Current time in seconds.
+
+    #     Returns:
+    #         threading.Thread: Updated or new OpenAI stream thread.
+    #     """
+    #     if self.should_process(result, current_time):
+    #         self.update_wake_time()
+    #         if not openai_stream_thread or not openai_stream_thread.is_alive():
+    #             self.openai_client.stop_signal.clear()
+    #             # First, let's determine if this is likely to be a request that requires a function/tool to run or if it is just part of a conversation.
+    #             call_type_messages = self.openai_conversation_builder.create_check_if_tool_call_messages(result)
+    #             openai_is_tool_response = self.openai_client.create_completion(call_type_messages, False, {"type": "json_object"}, openai_functions)
+    #             is_tool_request = json.loads(openai_is_tool_response.choices[0].message.content).get("is_tool", False)
+    #             # Now, let's create the full conversation.
+    #             conversation = self.openai_conversation_builder.create_recent_conversation_messages_array(result)
+    #             if is_tool_request:
+    #                 # Based on the intermediary response, this is likely a tool request, so let's allow openai to select from the given tools and complete the request.
+    #                 tool_response = self.openai_client.create_completion(conversation, False, None, openai_functions)
+    #                 tool_response_message = tool_response.choices[0].message 
+    #                 tool_calls = tool_response_message.tool_calls  
+    #                 if tool_calls: 
+    #                     # Handle single tool_call. todo: Handle parallel tool calls.
+    #                     tool_call = tool_calls[0] 
+    #                     tool_processor_response = self.tool_processor.process_tool_request(tool_call)
+    #                     # The tool has been processed.
+    #                     if tool_processor_response["success"]:
+    #                         # If the requested tool was annotated as conversational, then let's continue the conversation.
+    #                         if tool_processor_response["is_conversational"]:
+    #                             conversation.append(tool_response_message)
+    #                             tool_call_response_message = self.openai_conversation_builder.create_tool_call_response_message(tool_processor_response)
+    #                             conversation.append(tool_call_response_message)
+    #                             openai_stream_thread = threading.Thread(target=self.openai_client.stream_response, args=(conversation,))
+    #                             openai_stream_thread.start()
+    #                         else:
+    #                             # if the tool was not conversational, then we can end the sequence here, as nothing further needs to be said. 
+    #                             # Let's record the user's request.
+    #                             self.store_conversation(speaker_type=CONVERSATIONS_CONFIG["user"], response=result)
+                            
+    #                     else:
+    #                         # The tool was not processed successfully, let the user know.
+    #                         self.audio_out.add_to_queue(get_tool_not_found_phrase())
+    #                 else:
+    #                     # There are no relevant tools for this conversation.  Let's continue as if no tool request was made.
+    #                     self.continue_conversation(result, conversation)
+    #             else:
+    #                 # This is not a tool request, so let's continue the conversation.
+    #                 self.continue_conversation(result, conversation)
+    #     else:
+    #         logging.info("ROBOT THOUGHT: Ignoring Conversation, it doesn't appear to be relevant.")
+    #     return openai_stream_thread
+
+    def continue_conversation(self, result, conversation):
+        conversation = self.openai_conversation_builder.create_recent_conversation_messages_array(result)
+        openai_stream_thread = threading.Thread(target=self.openai_client.stream_response, args=(conversation,))
+        openai_stream_thread.start()
+        logging.info("ROBOT ACTION: Committing user input to memory.")
+        self.store_conversation(speaker_type=CONVERSATIONS_CONFIG["user"], response=result)
 
     def handle_partial_results(self, rec):
         """

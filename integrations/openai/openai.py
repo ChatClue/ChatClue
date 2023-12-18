@@ -2,7 +2,6 @@ import queue
 import threading
 import logging
 import tiktoken
-from decorators.openai_decorators import openai_functions
 from config import OPENAI_SETTINGS
 from openai import OpenAI, OpenAIError
 
@@ -47,6 +46,8 @@ class OpenAIClient:
             The response object from the OpenAI API or None if an error occurs.
         """
         try:
+            if tools is not None:
+                recent_messages[-1]["content"] = "Please pick a tool from the tools array and return a tools response to complete this request: " + recent_messages[-1]["content"]
             response = self.client.chat.completions.create(
                 model=self.model,
                 messages=recent_messages,

@@ -18,3 +18,6 @@ class Broadcaster:
     def shutdown(self):
         if hasattr(self.adapter, 'shutdown'):
             self.adapter.shutdown()
+
+broadcaster = Broadcaster()
+broadcaster.start()

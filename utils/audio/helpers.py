@@ -1,5 +1,5 @@
 from config import AUDIO_SETTINGS
-from decorators.openai_decorators import openai_function
+import random
 
 def contains_quiet_please_phrase(input_string):
     """
@@ -25,21 +25,11 @@ def contains_wake_phrase(input_string):
     """
     return any(phrase in input_string for phrase in AUDIO_SETTINGS['WAKE_PHRASES'])
 
-@openai_function
-def check_the_weather(city):
+def get_tool_not_found_phrase():
     """
-    {
-        "description": "checks the weather for a given city",
-        "parameters": {
-            "type": "object",
-            "properties": {
-                "city": {
-                    "type": "string",
-                    "description": "the city to check the weather for"
-                }
-            },
-            "required": ["city"]
-        }
-    }
+    Gets a random phrase to use when a tool is not found.
+
+    Returns:
+        str: A random phrase to use when a tool is not found.
     """
-    return "nice weather"
+    return random.choice(AUDIO_SETTINGS['TOOL_NOT_FOUND_PHRASES'])

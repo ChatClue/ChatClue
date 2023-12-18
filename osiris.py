@@ -3,11 +3,12 @@ from vosk import Model
 from celery import Celery
 from celery_config import get_celery_app
 from database.setup import DatabaseSetup
-from broadcast.broadcaster import Broadcaster
+from broadcast.broadcaster import broadcaster
 from audio.audio_processor import AudioProcessor
 from audio.audio_out import get_audio_out
 from utils.os.helpers import OSHelper
 from utils.text.welcome import welcome_message
+from tools import * # Import all openai tool functions
 import logging
 import subprocess
 import atexit
@@ -63,26 +64,12 @@ def main():
     # Setup the database
     DatabaseSetup.initial_setup()
 
-    # Start the broadcaster
-    logging.info("ROBOT THOUGHT: Starting broadcaster / hivemind")
-    broadcaster = Broadcaster()
-    broadcaster.start()
-    logging.info("ROBOT THOUGHT: Hivemind activated")
-
     # Retrieve audio settings from the configuration file
     sound_device_samplerate = AUDIO_SETTINGS.get('SOUND_DEVICE_SAMPLERATE')
     vosk_model = Model(lang=AUDIO_SETTINGS.get('VOSK_MODEL', "en-us"))
     sound_device_device = AUDIO_SETTINGS.get('SOUND_DEVICE_DEVICE')
     sound_device_blocksize = AUDIO_SETTINGS.get('SOUND_DEVICE_BLOCK_SIZE', 28000)
     audio_in_dump_filename = AUDIO_SETTINGS.get('AUDIO_IN_DUMP_FILENAME')
-
-    print("#"*90)
-    print("#"*90)
-    print("#"*90)
-    print(openai_functions)
-    print("#"*90)
-    print("#"*90)
-    print("#"*90)
 
     try: 
         # Initialize the audio processor with the configuration settings

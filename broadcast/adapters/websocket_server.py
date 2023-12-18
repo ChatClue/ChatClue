@@ -2,6 +2,7 @@ import asyncio
 import websockets
 import threading
 import queue
+import json
 from config import BROADCAST_WEBSOCKET_CONFIG
 
 class WebSocketServer:
@@ -28,7 +29,14 @@ class WebSocketServer:
                 await asyncio.wait([client.send(message) for client in self.connected_clients])
 
     def send_message(self, message):
-        self.message_queue.put(message)
+        try:
+            # Try to serialize the message as JSON
+            serialized_message = json.dumps(message)
+        except TypeError:
+            # If not JSON, just send along the string representation
+            serialized_message = str(message)
+
+        self.message_queue.put(serialized_message)
 
     def start_server(self):
         asyncio.set_event_loop(self.loop)

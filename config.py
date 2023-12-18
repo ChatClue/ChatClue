@@ -16,6 +16,22 @@ AUDIO_SETTINGS = {
     # These are keywords the system listens for to start processing voice commands.
     "WAKE_PHRASES": ["robot", "computer"],
 
+    # List of phrases that will be used to let the user know that a specific tool or piece of information
+    # Could not be retrieved.  This is specifically in relation to functionality associated with the 
+    # OpenAI API chat completion's tools parameter and corresponding responses.  
+    "TOOL_NOT_FOUND_PHRASES": [
+        "I apologize, but I'm experiencing some difficulties accessing the tool or information you're looking for. Could you please try again?",
+        "I'm sorry, I've encountered an issue while trying to retrieve the tool or information you asked for. Please give it another try.",
+        "I regret to inform you that I'm having trouble accessing the requested tool or information. Would you mind trying once more?",
+        "I'm experiencing some challenges in fetching the tool or information you need. Could you kindly attempt it again?",
+        "I'm sorry, but there seems to be a problem with accessing the tool or information you need. Please try again.",
+        "Unfortunately, I'm unable to access the tool or information you requested at the moment. Please try again shortly.",
+        "I apologize for the inconvenience, but I'm currently having trouble accessing the requested tool or information. Please try again later.",
+        "I'm facing some issues in obtaining the tool or information you requested. Would you please try again?",
+        "I'm sorry to report that I'm unable to retrieve the tool or information you're seeking right now. Please try again.",
+        "I regret that I'm encountering difficulties with accessing the tool or information you need. Could you please try again later?"
+    ],
+
     # The sample rate for audio input. This is the number of samples of audio carried per second.
     # Higher sample rates can provide better quality but require more processing power.
     "SOUND_DEVICE_SAMPLERATE": 48000,
@@ -47,7 +63,7 @@ OPENAI_SETTINGS = {
     "max_context_tokens": 2500,
 
     # Initial message or instruction to the GPT model, setting the tone and context for the interaction.
-    "initial_system_message": "You are a friendly, but not obsequious, robot assistant."
+    "initial_system_message": "You are a physical robot with the ability to take physical actions in the world based on user requests. You are also an assistant and conversational."
 }
 
 DATABASE_CONFIG = {
