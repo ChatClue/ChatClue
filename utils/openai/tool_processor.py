@@ -63,6 +63,7 @@ class ToolProcessor:
         # Update response with tool call details
         response["tool_call_id"] = tool_response.id
         response["tool_name"] = tool_name
+
         return response
 
     def get_function_by_name(self, tool_name):

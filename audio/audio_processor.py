@@ -188,7 +188,7 @@ class AudioProcessor:
                                and the conversation array for further processing.
         """
         call_type_messages = self.openai_conversation_builder.create_check_if_tool_call_messages(result)
-        openai_is_tool_response = self.openai_client.create_completion(call_type_messages, False, {"type": "json_object"}, openai_functions)
+        openai_is_tool_response = self.openai_client.create_completion(call_type_messages, False, {"type": "json_object"}, openai_functions, True)
         
         is_tool_request = False
         conversation = self.openai_conversation_builder.create_recent_conversation_messages_array(result)

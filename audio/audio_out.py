@@ -24,6 +24,7 @@ class AudioOutput:
         tts_module = importlib.import_module(tts_module_name)
         tts_adapter_class = getattr(tts_module, tts_class_name)
         self.tts_adapter = tts_adapter_class()  # Instantiate the TTS adapter
+        self.interruption_detected = False 
 
         self.running = True
 
@@ -68,17 +69,19 @@ class AudioOutput:
         Args:
             text (str): The text to be converted to speech and played.
         """
+        self.interruption_detected = False
         self.request_queue.put(text)
 
     def process_queue(self):
         """
         Continuously processes items from the request queue, converting them to speech.
         """
-        while self.running:
+        while self.running and not self.interruption_detected:
             text = self.request_queue.get()
             with self.tts_lock:
                 filename = self.text_to_speech(text)
-                self.ready_files.put(filename)
+                if not self.interruption_detected:
+                    self.ready_files.put(filename)
                 self.request_queue.task_done()
     
     def play_sequentially(self):
@@ -134,9 +137,12 @@ class AudioOutput:
         """
         Stops all audio playback and clears the audio queues.
         """
+        self.interruption_detected = True
         self.clear_queue()
         self.stop_audio()
         OSHelper.clear_orphaned_audio_files()
+        time.sleep(1)
+        self.interruption_detected = False
 
     def clear_queue(self):
         """

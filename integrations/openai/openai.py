@@ -33,9 +33,10 @@ class OpenAIClient:
         self.stop_signal = threading.Event()
         self.model = OPENAI_SETTINGS.get('model', "gpt-3.5-turbo-1106")
         self.embedding_model = OPENAI_SETTINGS.get('embedding_model', "text-embedding-ada-002")
+        self.temperature = OPENAI_SETTINGS.get('temperature', 0.5)
         self.streaming_complete = False
 
-    def create_completion(self, recent_messages, streaming=True, response_format=None, tools=None):
+    def create_completion(self, recent_messages, streaming=True, response_format=None, tools=None, is_tool_call=False):
         """
         Creates a completion request to the OpenAI API based on recognized text.
 
@@ -46,15 +47,18 @@ class OpenAIClient:
             The response object from the OpenAI API or None if an error occurs.
         """
         try:
-            if tools is not None:
+            tool_choice = None
+            if tools is not None and not is_tool_call:
                 recent_messages[-1]["content"] = "Please pick a tool from the tools array and return a tools response to complete this request: " + recent_messages[-1]["content"]
+                tool_choice = "auto"
             response = self.client.chat.completions.create(
                 model=self.model,
                 messages=recent_messages,
                 tools=tools,
-                temperature=0,
+                temperature=self.temperature,
                 stream=streaming,
-                response_format=response_format
+                response_format=response_format,
+                tool_choice=tool_choice
             )
             return response
         except OpenAIError as e:

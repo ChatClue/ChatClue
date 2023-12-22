@@ -61,7 +61,13 @@ class WebSocketServer:
         Args:
             message: The message to be sent.
         """
-        self.message_queue.put(message)
+        try:
+            # Try to serialize the message as JSON
+            serialized_message = json.dumps(message)
+        except TypeError:
+            # If not JSON, just send along the string representation
+            serialized_message = str(message)
+        self.message_queue.put(serialized_message)
 
     def start_server(self):
         """
