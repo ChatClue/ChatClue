@@ -4,7 +4,7 @@ import json
 from movement.movement import PiCarXMovements
 
 async def listen():
-    uri = "ws://192.168.86.38:8765"
+    uri = "ws://192.168.86.38:8765/websocket"
     car = PiCarXMovements()
 
     async with websockets.connect(uri) as websocket:

@@ -25,7 +25,7 @@ class AudioOutput:
         tts_adapter_class = getattr(tts_module, tts_class_name)
         self.tts_adapter = tts_adapter_class()  # Instantiate the TTS adapter
 
-        self.running = True
+        self.stop_signal = threading.Event()
 
         # Initialize pygame for playing audio
         pygame.init()
@@ -74,27 +74,33 @@ class AudioOutput:
         """
         Continuously processes items from the request queue, converting them to speech.
         """
-        while self.running:
-            text = self.request_queue.get()
-            with self.tts_lock:
-                filename = self.text_to_speech(text)
-                self.ready_files.put(filename)
-                self.request_queue.task_done()
+        while not self.stop_signal.is_set():
+            try:
+                text = self.request_queue.get(timeout=0.1)
+                with self.tts_lock:
+                    if not self.stop_signal.is_set():
+                        filename = self.text_to_speech(text)
+                        self.ready_files.put(filename)
+                        self.request_queue.task_done()
+                    else: 
+                        break
+            except queue.Empty:
+                continue
     
     def play_sequentially(self):
-        """
-        Continuously plays audio files from the ready files queue, sequentially.
-        """
-        while self.running:
+        while not self.stop_signal.is_set():
             if not self.is_playing() and not self.ready_files.empty():
                 filename = self.ready_files.get()
                 with self.play_lock:
-                    # Check if the file exists and retry a few times if it doesn't
-                    for _ in range(100):  # retry up to 3 times
-                        if os.path.exists(filename):
-                            self.play_audio_file(filename)
-                            break
-                        time.sleep(0.1)  # wait for 100 milliseconds before retrying
+                    if not self.stop_signal.is_set():  # Check again before playing
+                        # Check if the file exists and retry a few times if it doesn't
+                        for _ in range(3):  # retry up to 3 times
+                            if os.path.exists(filename):
+                                self.play_audio_file(filename)
+                                break
+                            time.sleep(0.1)  # wait for 100 milliseconds before retrying
+                    else:
+                        break
 
     def is_playing(self):
         """
@@ -103,7 +109,10 @@ class AudioOutput:
         Returns:
             bool: True if audio is currently playing, False otherwise.
         """
-        return pygame.mixer.music.get_busy()
+        if pygame.mixer.get_init():
+            return pygame.mixer.music.get_busy()
+        else:
+            return False
 
     def play_audio_file(self, filename):
         """
@@ -134,6 +143,11 @@ class AudioOutput:
         """
         Stops all audio playback and clears the audio queues.
         """
+        self.full_clear()
+        time.sleep(0.5)
+        self.full_clear()
+        
+    def full_clear(self):
         self.clear_queue()
         self.stop_audio()
         OSHelper.clear_orphaned_audio_files()
@@ -156,9 +170,10 @@ class AudioOutput:
                 break
     
     def shutdown(self):
-        self.stop_all_audio()
         # Signal the threads to stop running
-        self.running = False
+        self.stop_signal.set()
+        self.stop_all_audio()
+        logging.info("AUDIO STOPPED")
 
 audio_out = AudioOutput()
 

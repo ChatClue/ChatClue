@@ -45,6 +45,7 @@ class AudioProcessor:
         self.full_assistant_response = ''
         self.last_wake_time = 0
         self.last_response_end_time = 0
+        self.processing_openai_request = False
 
     def open_dump_file(self):
         """Opens the file to dump audio input if a filename is provided."""
@@ -163,18 +164,23 @@ class AudioProcessor:
         Returns:
             threading.Thread: Updated or new OpenAI stream thread.
         """
-        if self.should_process(result, current_time):
-            self.update_wake_time()
-            if not openai_stream_thread or not openai_stream_thread.is_alive():
-                self.openai_client.stop_signal.clear()
-                is_tool_request, conversation = self.determine_tool_request(result)
-                if is_tool_request:
-                    self.handle_tool_request(result, conversation)
-                else:
-                    self.continue_conversation(result, conversation)
-        else:
-            logging.info("ROBOT THOUGHT: Ignoring Conversation, it doesn't appear to be relevant.")
-        return openai_stream_thread
+        try:
+            if self.should_process(result, current_time) and not self.processing_openai_request:
+                self.update_wake_time()
+                self.processing_openai_request = True
+                if not openai_stream_thread or not openai_stream_thread.is_alive():
+                    self.openai_client.stop_signal.clear()
+                    is_tool_request, conversation = self.determine_tool_request(result)
+                    if is_tool_request:
+                        self.handle_tool_request(result, conversation)
+                    else:
+                        self.continue_conversation(result, conversation)
+            else:
+                logging.info("ROBOT THOUGHT: Ignoring Conversation, it doesn't appear to be relevant.")
+        finally:
+            self.processing_openai_request = False
+            return openai_stream_thread
+        
     
     def determine_tool_request(self, result):
         """
@@ -188,7 +194,7 @@ class AudioProcessor:
                                and the conversation array for further processing.
         """
         call_type_messages = self.openai_conversation_builder.create_check_if_tool_call_messages(result)
-        openai_is_tool_response = self.openai_client.create_completion(call_type_messages, False, {"type": "json_object"}, openai_functions)
+        openai_is_tool_response = self.openai_client.create_completion(call_type_messages, False, {"type": "json_object"}, openai_functions, True)
         
         is_tool_request = False
         conversation = self.openai_conversation_builder.create_recent_conversation_messages_array(result)
@@ -261,6 +267,7 @@ class AudioProcessor:
             result (str): The recognized text to continue the conversation with.
             conversation (list): The existing conversation array.
         """
+        self.openai_client.stop_processing_request()
         conversation = self.openai_conversation_builder.create_recent_conversation_messages_array(result)
         openai_stream_thread = threading.Thread(target=self.openai_client.stream_response, args=(conversation,))
         openai_stream_thread.start()
@@ -284,12 +291,14 @@ class AudioProcessor:
         Stops the conversation and any ongoing audio processing.
         """
         logging.info("ROBOT THOUGHT: Request to stop talking recognized. Stopping stream.")
-        self.openai_client.stop_signal.set()
-        with self.openai_client.response_queue.mutex:
-            self.openai_client.response_queue.queue.clear()
-            if self.full_assistant_response:
-                logging.info("ROBOT ACTION: Committing my partial response to memory")
-                self.store_full_assistant_response()
+        self.stop_all_audio()
+        if self.full_assistant_response:
+            logging.info("ROBOT ACTION: Committing my partial response to memory")
+            self.store_full_assistant_response()
+
+    def stop_all_audio(self):
+        self.audio_out_response_buffer = ''
+        self.openai_client.stop_processing_request()
         self.audio_out.stop_all_audio()
 
     def write_to_dump_file(self, data):

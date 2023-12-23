@@ -1,3 +1,7 @@
+import logging
+
+LOG_LEVEL=logging.CRITICAL #Use logging.INFO or logging.DEBUG for verbose outputs in the terminal
+
 AUDIO_SETTINGS = {
     # List of phrases that, when detected, indicate a request for quiet or silence.
     # These phrases are used by the system to recognize when it should stop speaking or reduce noise.
@@ -53,8 +57,8 @@ OPENAI_SETTINGS = {
     # OpenAI API key for accessing GPT models. Uncomment and set your key here if not using an environment variable.
     #"api_key": "sk-<your-openai-api-key>",
 
-    # The specific model of GPT to use for generating responses (e.g., 'gpt-3.5-turbo').
-    "model": "gpt-4-1106-preview",
+    # The specific model of GPT to use for generating responses (e.g., 'gpt-3.5-turbo-1106').
+    "model": "gpt-3.5-turbo-1106", #"gpt-4-1106-preview",
 
     # Model used for embedding text into a numerical format, useful in certain applications like semantic search.
     "embedding_model": "text-embedding-ada-002",
@@ -62,8 +66,11 @@ OPENAI_SETTINGS = {
     # Maximum number of tokens (words) that can be used in the context for the GPT model.
     "max_context_tokens": 2500,
 
+    # Temperature: Controls the randomness of the GPT model's output. 0 is deterministic, 1 is maximum randomness.
+    "temperature": 0.5,
+
     # Initial message or instruction to the GPT model, setting the tone and context for the interaction.
-    "initial_system_message": "You are a physical robot with the ability to take physical actions in the world based on user requests. You are also an assistant and conversational."
+    "initial_system_message": "You are connected to a physical robot with the ability to take physical actions in the world based on user requests. You are also an assistant and conversational."
 }
 
 DATABASE_CONFIG = {
@@ -100,7 +107,7 @@ CELERY_CONFIG = {
     "RUN_LOCALLY_AUTOMATICALLY": True,
 
     # Logging level for Celery. Use "debug" for more verbose output, helpful in development.
-    "LOCAL_LOG_LEVEL": "info",
+    "LOCAL_LOG_LEVEL": "critical",
 
     # The name of the application using Celery.
     "APPLICATION_NAME": "osiris",
@@ -124,8 +131,8 @@ TTS_CONFIG = {
     # Additional Adapters: Please feel free to add your own adapter classes to the audio/tts_adapters 
     #                      directory for your own TTS service / models. 
 
-    # "tts_adapter": "audio.tts_adapters.gtts.GTTSAdapter",
-    "tts_adapter": "audio.tts_adapters.pyttsx3.Pyttsx3Adapter",
+    "tts_adapter": "audio.tts_adapters.gtts.GTTSAdapter",
+    # "tts_adapter": "audio.tts_adapters.pyttsx3.Pyttsx3Adapter",
 }
 
 # Optional audio.tts_adapters.gtts.GTTSAdapter configuration.

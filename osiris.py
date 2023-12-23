@@ -1,9 +1,9 @@
-from config import AUDIO_SETTINGS, CELERY_CONFIG
+from config import AUDIO_SETTINGS, CELERY_CONFIG, LOG_LEVEL
 from vosk import Model
 from celery import Celery
 from celery_config import get_celery_app
 from database.setup import DatabaseSetup
-from broadcast.broadcaster import get_broadcaster
+from broadcast.broadcaster import broadcaster
 from audio.audio_processor import AudioProcessor
 from audio.audio_out import get_audio_out
 from utils.os.helpers import OSHelper
@@ -12,20 +12,20 @@ from tools import * # Import all openai tool functions
 import logging
 import subprocess
 import atexit
+import sys
+import threading
+import time
 
 from decorators.openai_decorators import openai_functions
 
 # Configure basic logging for the application
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logging.basicConfig(level=LOG_LEVEL, format='%(asctime)s - %(levelname)s - %(message)s')
 
 # Configure background processor / subconcious systems
 celery_app = get_celery_app()
 
 # Configure audio output
 audio_out = get_audio_out()
-
-# Configure broadcaster
-broadcaster = get_broadcaster()
 
 def start_celery_worker():
     """
@@ -49,6 +49,24 @@ def start_celery_worker():
     # Register function to terminate worker on exit
     atexit.register(lambda: celery_worker.terminate())
     return celery_worker
+
+def stop_celery_worker(celery_worker):
+    """
+    Stops the Celery worker gracefully.
+
+    Args:
+        celery_worker (subprocess.Popen): The subprocess object representing the Celery worker.
+    """
+    if celery_worker:
+        # Send SIGTERM signal to gracefully terminate the worker
+        celery_worker.terminate()
+        # Wait for the worker to exit
+        try:
+            celery_worker.wait(timeout=0.5)  # Adjust the timeout as needed
+        except subprocess.TimeoutExpired:
+            # If the worker doesn't terminate within the timeout, kill it
+            logging.info("Forcibly terminating the Celery worker.")
+            celery_worker.kill()
 
 
 def main():
@@ -77,6 +95,7 @@ def main():
     try: 
         # Initialize the audio processor with the configuration settings
         logging.info("ROBOT THOUGHT: I am ready to begin.")
+        audio_out.add_to_queue("Welcome to Project Osiris. I am ready to begin.")
         audio_processor = AudioProcessor(vosk_model, sound_device_samplerate, sound_device_device, sound_device_blocksize, audio_in_dump_filename, broadcaster)
         # Start processing the audio stream
         audio_processor.process_stream()
@@ -84,20 +103,11 @@ def main():
         # Log the termination of the process
         logging.info("\nDone")
     finally:
-        if celery_worker:
-            logging.info("Terminating Celery worker")
-            celery_worker.terminate()
-        
-        logging.info("Shutting down audio output")
+        # Terminate the Celery worker if it was started
+        stop_celery_worker(celery_worker)
         audio_out.shutdown()
-        
-        logging.info("Shutting down broadcaster")
         broadcaster.shutdown()
-
-        logging.info("Performing final cleanup")
-        OSHelper.system_file_cleanup()
-
-        logging.info("Application shutdown complete")
+        sys.exit(0)
 
 # Standard Python idiom for running the main function
 if __name__ == "__main__":

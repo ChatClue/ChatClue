@@ -2,6 +2,7 @@ import queue
 import threading
 import logging
 import tiktoken
+import time
 from config import OPENAI_SETTINGS
 from openai import OpenAI, OpenAIError
 
@@ -33,9 +34,10 @@ class OpenAIClient:
         self.stop_signal = threading.Event()
         self.model = OPENAI_SETTINGS.get('model', "gpt-3.5-turbo-1106")
         self.embedding_model = OPENAI_SETTINGS.get('embedding_model', "text-embedding-ada-002")
+        self.temperature = OPENAI_SETTINGS.get('temperature', 0.5)
         self.streaming_complete = False
 
-    def create_completion(self, recent_messages, streaming=True, response_format=None, tools=None):
+    def create_completion(self, recent_messages, streaming=True, response_format=None, tools=None, is_tool_call=False):
         """
         Creates a completion request to the OpenAI API based on recognized text.
 
@@ -46,15 +48,18 @@ class OpenAIClient:
             The response object from the OpenAI API or None if an error occurs.
         """
         try:
-            if tools is not None:
+            tool_choice = None
+            if tools is not None and not is_tool_call:
                 recent_messages[-1]["content"] = "Please pick a tool from the tools array and return a tools response to complete this request: " + recent_messages[-1]["content"]
+                tool_choice = "auto"
             response = self.client.chat.completions.create(
                 model=self.model,
                 messages=recent_messages,
                 tools=tools,
-                temperature=0,
+                temperature=self.temperature,
                 stream=streaming,
-                response_format=response_format
+                response_format=response_format,
+                tool_choice=tool_choice
             )
             return response
         except OpenAIError as e:
@@ -69,20 +74,26 @@ class OpenAIClient:
         Streams the response from the OpenAI API to a queue.
 
         This method fetches the response for the recognized text and puts each response chunk into a queue.
+        The method frequently checks for a stop signal to terminate streaming immediately.
 
         Args:
             recognized_text (str): The text recognized from the audio input.
         """
         self.streaming_complete = False
-        response = self.create_completion(conversation)
-        if response:
-            for chunk in response:
-                if self.stop_signal.is_set():
-                    break
-                self.response_queue.put(chunk)
-        else:
-            logging.info("No response from OpenAI API or an error occurred.")
-        self.streaming_complete = True
+        try:
+            response = self.create_completion(conversation)
+            if response:
+                for chunk in response:
+                    if self.stop_signal.is_set():
+                        logging.info("Streaming stopped due to stop signal.")
+                        break
+                    self.response_queue.put(chunk)
+            else:
+                logging.info("No response from OpenAI API or an error occurred.")
+        except Exception as e:
+            logging.error(f"Error during streaming: {e}")
+        finally:
+            self.streaming_complete = True
 
     def create_embeddings(self, text):
         """
@@ -120,3 +131,32 @@ class OpenAIClient:
         """
         enc = tiktoken.encoding_for_model(self.model)
         return len(enc.encode(text))
+    
+    def stop_processing_request(self):
+        """
+        Stops processing the current request immediately and clears the response queue.
+        """
+        self.stop_signal.set()  # Signal to stop streaming
+        self.full_stop()
+        time.sleep(0.5)
+        self.full_stop()
+        self.stop_signal.clear()  # Reset the stop signal for future requests
+
+    
+    def clear_queue(self):
+        """
+        Clears all items from the response queue.
+        """
+        while not self.response_queue.empty():
+            try:
+                self.response_queue.get_nowait()  # Remove all items from the queue
+                self.response_queue.task_done()
+            except queue.Empty:
+                break
+    
+    def full_stop(self):
+        self.clear_queue()      # Clear the queue immediately
+        self.streaming_complete = False  # Reset the streaming state
+    
+    def shutdown(self):
+        self.stop_processing_request()

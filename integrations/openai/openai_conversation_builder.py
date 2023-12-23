@@ -51,8 +51,8 @@ class OpenAIConversationBuilder:
                         including a system message to determine if the conversation requires a tool call.
         """
         messages = self.create_recent_conversation_messages_array(result, overwrite_context_buffer=True, context_buffer=100)
-        tool_check_message = "Based on the previous messages, if the conversation seems to require a function or tool to be called to provide an answer, then in JSON format, please provide true or false for the following key: is_tool. This will inform our next calls."
-        messages.append({'role': 'system', 'content': tool_check_message})
+        tool_check_message = "Respond in JSON format and only in JSON format. Do not return extraneous \n characters. Based on the previous messages, if the conversation seems to require a function or tool to be called to provide an answer, then in JSON format, please provide true or false for the following key: is_tool. Like {'is_tool': true} or {'is_tool': false}. This will inform our next calls. Remember, only respond in JSON format."
+        messages.append({'role': 'user', 'content': tool_check_message})
         return messages
 
     def create_tool_call_response_message(self, tool_function_response):
