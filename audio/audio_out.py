@@ -68,8 +68,6 @@ class AudioOutput:
         Args:
             text (str): The text to be converted to speech and played.
         """
-        print("\033[92mAdding text to queue\033[0m")
-        print("Adding text to queue: " + text)
         self.request_queue.put(text)
 
     def process_queue(self):
@@ -81,7 +79,6 @@ class AudioOutput:
                 text = self.request_queue.get(timeout=0.1)
                 with self.tts_lock:
                     if not self.stop_signal.is_set():
-                        print("Processing text: " + text)
                         filename = self.text_to_speech(text)
                         self.ready_files.put(filename)
                         self.request_queue.task_done()

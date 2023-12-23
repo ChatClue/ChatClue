@@ -1,3 +1,7 @@
+import logging
+
+LOG_LEVEL=logging.CRITICAL #Use logging.INFO or logging.DEBUG for verbose outputs in the terminal
+
 AUDIO_SETTINGS = {
     # List of phrases that, when detected, indicate a request for quiet or silence.
     # These phrases are used by the system to recognize when it should stop speaking or reduce noise.
@@ -100,7 +104,7 @@ CELERY_CONFIG = {
     # Set to False for manual start or in production environments. True is preferable for development.
     # Manual starts can be achieved by running the following command in the terminal:
     # - celery -A osiris.celery_app worker --loglevel=info
-    "RUN_LOCALLY_AUTOMATICALLY": True,
+    "RUN_LOCALLY_AUTOMATICALLY": False,
 
     # Logging level for Celery. Use "debug" for more verbose output, helpful in development.
     "LOCAL_LOG_LEVEL": "info",

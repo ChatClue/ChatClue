@@ -1,4 +1,4 @@
-from config import AUDIO_SETTINGS, CELERY_CONFIG
+from config import AUDIO_SETTINGS, CELERY_CONFIG, LOG_LEVEL
 from vosk import Model
 from celery import Celery
 from celery_config import get_celery_app
@@ -19,7 +19,7 @@ import time
 from decorators.openai_decorators import openai_functions
 
 # Configure basic logging for the application
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logging.basicConfig(level=LOG_LEVEL, format='%(asctime)s - %(levelname)s - %(message)s')
 
 # Configure background processor / subconcious systems
 celery_app = get_celery_app()
@@ -95,6 +95,7 @@ def main():
     try: 
         # Initialize the audio processor with the configuration settings
         logging.info("ROBOT THOUGHT: I am ready to begin.")
+        audio_out.add_to_queue("Welcome to Project Osiris. I am ready to begin.")
         audio_processor = AudioProcessor(vosk_model, sound_device_samplerate, sound_device_device, sound_device_blocksize, audio_in_dump_filename, broadcaster)
         # Start processing the audio stream
         audio_processor.process_stream()
