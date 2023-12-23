@@ -107,8 +107,6 @@ def main():
         stop_celery_worker(celery_worker)
         audio_out.shutdown()
         broadcaster.shutdown()
-        for thread in threading.enumerate():
-            print(thread.name)
         sys.exit(0)
 
 # Standard Python idiom for running the main function
