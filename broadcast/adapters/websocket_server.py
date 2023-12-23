@@ -3,6 +3,7 @@ import websockets
 import threading
 import queue
 import json
+import time
 from config import BROADCAST_WEBSOCKET_CONFIG
 
 class WebSocketServer:
@@ -25,9 +26,11 @@ class WebSocketServer:
         """
         self.host = BROADCAST_WEBSOCKET_CONFIG.get("websocket_host", "localhost")
         self.port = BROADCAST_WEBSOCKET_CONFIG.get("websocket_port", 8765)
+        self.server_thread = None
         self.connected_clients = set()
         self.message_queue = queue.Queue()
         self.loop = asyncio.new_event_loop()
+        self.shutdown_event = asyncio.Event()
 
     async def echo(self, websocket, path):
         """
@@ -41,6 +44,8 @@ class WebSocketServer:
         try:
             async for message in websocket:
                 print(f"Received message: {message}")
+                if self.shutdown_event.is_set():
+                    break  # Exit if shutdown event is set
                 await websocket.send(f"Echo: {message}")
         finally:
             self.connected_clients.remove(websocket)
@@ -49,7 +54,7 @@ class WebSocketServer:
         """
         An asynchronous method to send messages from the queue to all connected clients.
         """
-        while True:
+        while not self.shutdown_event.is_set():
             message = await asyncio.to_thread(self.message_queue.get)
             if self.connected_clients:
                 await asyncio.wait([client.send(message) for client in self.connected_clients])
@@ -69,13 +74,14 @@ class WebSocketServer:
             serialized_message = str(message)
         self.message_queue.put(serialized_message)
 
-    def start_server(self):
+    async def start_server(self):
         """
         Starts the server and runs the asyncio event loop.
         """
-        asyncio.set_event_loop(self.loop)
-        self.loop.run_until_complete(self.start())
-        self.loop.run_forever()
+        await asyncio.gather(
+            websockets.serve(self.echo, self.host, self.port),
+            self.send_message_to_clients()
+        )
 
     def start(self):
         """
@@ -83,32 +89,60 @@ class WebSocketServer:
         """
         start_server = websockets.serve(self.echo, self.host, self.port)
         asyncio.get_event_loop().create_task(self.send_message_to_clients())
-        asyncio.get_event_loop().run_until_complete(start_server)
-        asyncio.get_event_loop().run_forever()
+        return start_server
+    
+    async def server_loop(self):
+        """
+        A loop that continues until the shutdown event is set.
+        """
+        while not self.shutdown_event.is_set():
+            await asyncio.sleep(0.1)
     
     async def stop_loop(self):
         """
         An asynchronous method to stop the event loop after a short delay.
         """
-        await asyncio.sleep(0.1)
+        # Cancel all remaining asyncio tasks
+        tasks = [t for t in asyncio.all_tasks(self.loop) if t is not asyncio.current_task()]
+        for task in tasks:
+            task.cancel()
+            try:
+                await task
+            except asyncio.CancelledError:
+                pass
+
+        # Close all clients
+        for client in self.connected_clients:
+            await client.close()
+
+        # Stop the loop
         self.loop.stop()
     
     def schedule_shutdown(self):
         """
         Schedules the shutdown of the server, closing all client connections and stopping the event loop.
         """
-        for client in self.connected_clients:
-            asyncio.ensure_future(client.close(), loop=self.loop)
-        asyncio.ensure_future(self.stop_loop(), loop=self.loop)
+        asyncio.run_coroutine_threadsafe(self.stop_loop(), self.loop)
 
     def run(self):
         """
         Runs the WebSocket server on a separate daemon thread.
         """
-        threading.Thread(target=self.start_server, daemon=True).start()
-
+        self.server_thread = threading.Thread(target=self.loop.run_until_complete, args=(self.start_server(),), daemon=True)
+        self.server_thread.start()
+        
     def shutdown(self):
         """
         Initiates the shutdown process for the WebSocket server.
         """
-        self.schedule_shutdown()
+        if self.server_thread:
+            self.shutdown_event.set()
+            self.schedule_shutdown()
+            # Adding an additional loop stop command for safety
+            self.loop.call_soon_threadsafe(self.loop.stop)
+            while self.loop.is_running():
+                time.sleep(0.1)
+            self.loop.close()
+            print("IS RUNNING", self.loop.is_running())
+            print("THREAD IS RUNNING", self.server_thread.is_alive())
+            print("TREAD IS DAEMON", self.server_thread.daemon)
