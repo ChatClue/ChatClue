@@ -167,7 +167,7 @@ class AudioProcessor:
         try:
             if self.should_process(result, current_time) and not self.processing_openai_request:
                 self.update_wake_time()
-                self.processing_openai_reuqest = True
+                self.processing_openai_request = True
                 if not openai_stream_thread or not openai_stream_thread.is_alive():
                     self.openai_client.stop_signal.clear()
                     is_tool_request, conversation = self.determine_tool_request(result)
