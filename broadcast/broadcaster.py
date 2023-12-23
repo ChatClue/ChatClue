@@ -1,5 +1,6 @@
 from config import BROADCAST_CONFIG
 import importlib
+import os
 
 class Broadcaster:
     """
@@ -55,5 +56,6 @@ class Broadcaster:
         if hasattr(self.adapter, 'shutdown'):
             self.adapter.shutdown()
 
-broadcaster = Broadcaster()
-broadcaster.start()
+if os.getenv('CELERY_WORKER', 'false').lower() != 'true':
+    broadcaster = Broadcaster()
+    broadcaster.start()

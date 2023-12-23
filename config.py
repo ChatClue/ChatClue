@@ -104,10 +104,10 @@ CELERY_CONFIG = {
     # Set to False for manual start or in production environments. True is preferable for development.
     # Manual starts can be achieved by running the following command in the terminal:
     # - celery -A osiris.celery_app worker --loglevel=info
-    "RUN_LOCALLY_AUTOMATICALLY": False,
+    "RUN_LOCALLY_AUTOMATICALLY": True,
 
     # Logging level for Celery. Use "debug" for more verbose output, helpful in development.
-    "LOCAL_LOG_LEVEL": "info",
+    "LOCAL_LOG_LEVEL": "critical",
 
     # The name of the application using Celery.
     "APPLICATION_NAME": "osiris",
