@@ -1,5 +1,4 @@
 from config import AUDIO_SETTINGS, CELERY_CONFIG, LOG_LEVEL
-from vosk import Model
 from celery import Celery
 from celery_config import get_celery_app
 from database.setup import DatabaseSetup
@@ -85,18 +84,11 @@ def main():
     # Setup the database
     DatabaseSetup.initial_setup()
 
-    # Retrieve audio settings from the configuration file
-    sound_device_samplerate = AUDIO_SETTINGS.get('SOUND_DEVICE_SAMPLERATE')
-    vosk_model = Model(lang=AUDIO_SETTINGS.get('VOSK_MODEL', "en-us"))
-    sound_device_device = AUDIO_SETTINGS.get('SOUND_DEVICE_DEVICE')
-    sound_device_blocksize = AUDIO_SETTINGS.get('SOUND_DEVICE_BLOCK_SIZE', 28000)
-    audio_in_dump_filename = AUDIO_SETTINGS.get('AUDIO_IN_DUMP_FILENAME')
-
     try: 
         # Initialize the audio processor with the configuration settings
         logging.info("ROBOT THOUGHT: I am ready to begin.")
         audio_out.add_to_queue("Welcome to Project Osiris. I am ready to begin.")
-        audio_processor = AudioProcessor(vosk_model, sound_device_samplerate, sound_device_device, sound_device_blocksize, audio_in_dump_filename, broadcaster)
+        audio_processor = AudioProcessor()
         # Start processing the audio stream
         audio_processor.process_stream()
     except KeyboardInterrupt:
