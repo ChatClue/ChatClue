@@ -86,6 +86,11 @@ pip install celery redis
 pip install openai
 pip3 install asyncio
 pip3 install websockets
+pip install torch torchvision
+pip install opencv-python
+pip install matplotlib
+pip install ultralytics 
+
 
 # Install system-specific dependencies
 if [ "$OS_TYPE" = "Linux" ]; then

@@ -4,7 +4,7 @@ import json
 import threading
 import time
 import sounddevice as sd
-from vosk import KaldiRecognizer
+from vosk import KaldiRecognizer, Model
 from .audio_out import get_audio_out
 from integrations.openai.openai import OpenAIClient
 from integrations.openai.openai_conversation_builder import OpenAIConversationBuilder
@@ -13,7 +13,8 @@ from background.memory.tasks import store_conversation_task
 from decorators.openai_decorators import openai_functions
 from utils.openai.tool_processor import ToolProcessor
 from database.conversations import ConversationMemoryManager
-from config import CONVERSATIONS_CONFIG
+from broadcast.broadcaster import broadcaster
+from config import CONVERSATIONS_CONFIG, AUDIO_SETTINGS
 
 class AudioProcessor:
     """
@@ -28,12 +29,12 @@ class AudioProcessor:
         dump_filename (str): Filename to dump the audio input, if provided.
     """
 
-    def __init__(self, model, samplerate, device, blocksize, dump_filename=None, broadcaster=None):
-        self.model = model
-        self.samplerate = samplerate
-        self.device = device
-        self.blocksize = blocksize
-        self.dump_filename = dump_filename
+    def __init__(self):
+        self.model = Model(lang=AUDIO_SETTINGS.get('VOSK_MODEL', "en-us"))
+        self.samplerate = AUDIO_SETTINGS.get('SOUND_DEVICE_SAMPLERATE')
+        self.device = AUDIO_SETTINGS.get('SOUND_DEVICE_DEVICE')
+        self.blocksize = AUDIO_SETTINGS.get('SOUND_DEVICE_BLOCK_SIZE', 28000)
+        self.dump_filename = AUDIO_SETTINGS.get('AUDIO_IN_DUMP_FILENAME')
         self.audio_queue = queue.Queue()
         self.openai_client = OpenAIClient()
         self.conversation_memory_manager = ConversationMemoryManager()
