@@ -19,14 +19,16 @@ def process_command(car, message):
         command = json.loads(message)
         if isinstance(command, dict):
             action = command.get("action")
+            time = command.get("time", 1) / 1000
+            print(time)
             if action == "move_forward":
-                car.move_forward(command.get("speed", 0), command.get("time", 1))
+                car.move_forward(command.get("speed", 0), time)
             elif action == "move_backward":
-                car.move_backward(command.get("speed", 0), command.get("time", 1))
+                car.move_backward(command.get("speed", 0), time)
             elif action == "turn_left":
-                car.turn_left(command.get("speed", 0), command.get("angle", 0), command.get("time", 1))
+                car.turn_left(command.get("speed", 0), command.get("angle", 0), time)
             elif action == "turn_right":
-                car.turn_right(command.get("speed", 0), command.get("angle", 0), command.get("time", 1))
+                car.turn_right(command.get("speed", 0), command.get("angle", 0), time)
             elif action == "tilt_head_up":
                 car.tilt_head_up(command.get("angle_increment", 0))
             elif action == "tilt_head_down":
