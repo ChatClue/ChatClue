@@ -14,7 +14,7 @@ But, the architecture is generalizable and not limited to human and robot commun
 
 3. **Running the Application**: Simply execute `python3 osiris.py` after configuration. The system will be ready to start conversations using defined wake words (`config.py`) and will respond naturally using the chosen TTS (Text-to-Speech) adapter.
 
-4. **Example Client Application**: `osiris.py` can be run on its own, but you can also listen to its broadcaster for conversation parts and structured commands to facilitate robotic and other peripheral IoT controls. An example of this type of implementation can be found in the `examples/` directory.  The current example shows how to control a robotic car with natural language by running Project Osiris and listening to it with the `examples/picarx/client.py` script running on the robotic car. The corresponding functions to control the robotic car in Project Osiris can be found in the `tools/robot` directory, which are decorated with the project's @openai_function decorator described below.
+4. **Example Client Application**: `osiris.py` can be run on its own, but you can also listen to its broadcaster for conversation parts and structured commands to facilitate robotic and other peripheral IoT controls. An example of this type of implementation can be found in the `examples/` directory.  The current example shows how to control a robotic car with natural language by running Project Osiris and listening to it with the `examples/picarx/client.py` script running on the robotic car. The corresponding functions to control the robotic car in Project Osiris can be found in the `tools/picarx` directory, which are decorated with the project's @openai_function decorator described below.
 
 ## Key Features
 

@@ -14,7 +14,7 @@ The `examples/` directory provides practical, illustrative examples of how vario
 
 2. **Movement Class (`movement/movement.py`)**: This class encapsulates the logic for controlling the movements of the Picar-X. It translates command types into actual movement actions, such as moving forward, backward, turning, and adjusting the robot's head.
 
-3. **Tools Integration (`tools/robot/`)**: The `tools/robot` directory, located in the main application, contains functions decorated with `@openai_function`. These functions define actions like moving forward, turning, etc., and are used to populate the OpenAI tools array. The Picar-X example demonstrates how these tools can be utilized in a practical scenario.
+3. **Tools Integration (`tools/picarx/`)**: The `tools/picarx` directory, located in the main application, contains functions decorated with `@openai_function`. These functions define actions like moving forward, turning, etc., and are used to populate the OpenAI tools array. The Picar-X example demonstrates how these tools can be utilized in a practical scenario.
 
 4. **Running the Example**: If you have a picarx, you can run the example by running the root directory's osiris.py script  on your computer `python3 osiris.py` (or directly on the picar if you like). Then, run the `examples/picarx/client.py` script on the picarx. Now you can chat with the application in natural language and watch the PicarX complete the requested actions.
 

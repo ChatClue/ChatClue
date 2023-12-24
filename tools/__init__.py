@@ -1,1 +1,1 @@
-from .robot import *
+from .picarx import *

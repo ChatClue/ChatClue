@@ -8,31 +8,31 @@ class PiCarXMovements:
         self.tilt_angle = 0
         self.move_timer = None
 
-    def _set_timer(self):
+    def _set_timer(self, time=1.5):
         if self.move_timer is not None:
             self.move_timer.cancel()
-        self.move_timer = threading.Timer(1.5, self.stop)
+        self.move_timer = threading.Timer(time, self.stop)
         self.move_timer.start()
 
-    def move_forward(self, speed):
+    def move_forward(self, speed, time):
         self.px.set_dir_servo_angle(0)
         self.px.forward(speed)
-        self._set_timer()
+        self._set_timer(time)
 
-    def move_backward(self, speed):
+    def move_backward(self, speed, time):
         self.px.set_dir_servo_angle(0)
         self.px.backward(speed)
-        self._set_timer()
+        self._set_timer(time)
 
-    def turn_left(self, speed, angle):
+    def turn_left(self, speed, angle, time):
         self.px.set_dir_servo_angle(-angle)
         self.px.forward(speed)
-        self._set_timer()
+        self._set_timer(time)
 
-    def turn_right(self, speed, angle):
+    def turn_right(self, speed, angle, time):
         self.px.set_dir_servo_angle(angle)
         self.px.forward(speed)
-        self._set_timer()
+        self._set_timer(time)
 
     def tilt_head_up(self, angle_increment):
         self.tilt_angle += angle_increment

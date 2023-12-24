@@ -3,7 +3,7 @@ from broadcast.broadcaster import broadcaster
 
 
 @openai_function
-def move_forward(speed):
+def move_forward(speed, time):
     """
     {
         "description": "Moves the robot forward at a given speed.",
@@ -14,17 +14,21 @@ def move_forward(speed):
                 "speed": {
                     "type": "number",
                     "description": "The speed to move forward at, an integer between 10 and 100."
+                },
+                "time": {
+                    "type": "number",
+                    "description": "The time in miliseconds to move forward for, an integer between 1 and 5000."
                 }
             },
-            "required": ["speed"]
+            "required": ["speed", "time"]
         }
     }
     """
-    command = {"action": "move_forward", "speed": speed}
+    command = {"action": "move_forward", "speed": speed, "time": time}
     broadcaster.send_message(command)
 
 @openai_function
-def move_backward(speed):
+def move_backward(speed, time):
     """
     {
         "description": "Moves the robot backward at a given speed.",
@@ -35,17 +39,21 @@ def move_backward(speed):
                 "speed": {
                     "type": "number",
                     "description": "The speed to move backward at, an integer between 10 and 100."
+                },
+                "time": {
+                    "type": "number",
+                    "description": "The time in miliseconds to move forward for, an integer between 1 and 5000."
                 }
             },
-            "required": ["speed"]
+            "required": ["speed", "time"]
         }
     }
     """
-    command = {"action": "move_backward", "speed": speed}
+    command = {"action": "move_backward", "speed": speed, "time": time}
     broadcaster.send_message(command)
 
 @openai_function
-def turn_left(speed, angle):
+def turn_left(speed, angle, time):
     """
     {
         "description": "Turns the robot left at a given speed and angle.",
@@ -60,18 +68,22 @@ def turn_left(speed, angle):
                 "angle": {
                     "type": "number",
                     "description": "The angle to turn, an integer between 0 and 180."
+                },
+                "time": {
+                    "type": "number",
+                    "description": "The time in miliseconds to turn for, an integer between 1 and 5000."
                 }
             },
-            "required": ["speed", "angle"]
+            "required": ["speed", "angle", "time"]
         }
     }
     """
-    command = {"action": "turn_left", "speed": speed, "angle": angle}
+    command = {"action": "turn_left", "speed": speed, "angle": angle, "time": time}
     broadcaster.send_message(command)
     return "The robot has turned left"
 
 @openai_function
-def turn_right(speed, angle):
+def turn_right(speed, angle, time):
     """
     {
         "description": "Turns the robot right at a given speed and angle.",
@@ -86,13 +98,17 @@ def turn_right(speed, angle):
                 "angle": {
                     "type": "number",
                     "description": "The angle to turn, an integer between 0 and 180."
+                },
+                "time": {
+                    "type": "number",
+                    "description": "The time in miliseconds to turn for, an integer between 1 and 5000."
                 }
             },
-            "required": ["speed", "angle"]
+            "required": ["speed", "angle", "time"]
         }
     }
     """
-    command = {"action": "turn_right", "speed": speed, "angle": angle}
+    command = {"action": "turn_right", "speed": speed, "angle": angle, "time": time}
     broadcaster.send_message(command)
 
 @openai_function
