@@ -13,8 +13,6 @@ import subprocess
 import atexit
 import sys
 import threading
-import time
-from background.memory.tasks import test_task
 
 from decorators.openai_decorators import openai_functions
 
