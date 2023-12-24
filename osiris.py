@@ -14,6 +14,7 @@ import atexit
 import sys
 import threading
 import time
+from background.memory.tasks import test_task
 
 from decorators.openai_decorators import openai_functions
 
@@ -90,7 +91,9 @@ def main():
         audio_out.add_to_queue("Welcome to Project Osiris. I am ready to begin.")
         audio_processor = AudioProcessor()
         # Start processing the audio stream
-        audio_processor.process_stream()
+        audio_thread = threading.Thread(target=audio_processor.process_stream)
+        audio_thread.start()
+        audio_thread.join()
     except KeyboardInterrupt:
         # Log the termination of the process
         logging.info("\nDone")

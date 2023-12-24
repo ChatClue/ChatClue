@@ -16,6 +16,5 @@ def store_conversation_task(speaker_type, response):
     """
     # Initialize the conversation memory manager
     manager = ConversationMemoryManager()
-
     # Add the conversation part to the database
     manager.add_conversation(speaker_type=speaker_type, response=response)

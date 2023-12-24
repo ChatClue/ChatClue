@@ -28,31 +28,6 @@ def move_forward(speed, time):
     broadcaster.send_message(command)
 
 @openai_function
-def move_backward(speed, time):
-    """
-    {
-        "description": "Moves the robot backward at a given speed.",
-        "is_conversational": false,
-        "parameters": {
-            "type": "object",
-            "properties": {
-                "speed": {
-                    "type": "number",
-                    "description": "The speed to move backward at, an integer between 10 and 100."
-                },
-                "time": {
-                    "type": "number",
-                    "description": "The time in miliseconds to move forward for, an integer between 1 and 5000."
-                }
-            },
-            "required": ["speed", "time"]
-        }
-    }
-    """
-    command = {"action": "move_backward", "speed": speed, "time": time}
-    broadcaster.send_message(command)
-
-@openai_function
 def turn_left(speed, angle, time):
     """
     {
@@ -109,6 +84,89 @@ def turn_right(speed, angle, time):
     }
     """
     command = {"action": "turn_right", "speed": speed, "angle": angle, "time": time}
+    broadcaster.send_message(command)
+
+@openai_function
+def move_backward(speed, time):
+    """
+    {
+        "description": "Moves the robot backward at a given speed.",
+        "is_conversational": false,
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "speed": {
+                    "type": "number",
+                    "description": "The speed to move backward at, an integer between 10 and 100."
+                },
+                "time": {
+                    "type": "number",
+                    "description": "The time in miliseconds to move forward for, an integer between 1 and 5000."
+                }
+            },
+            "required": ["speed", "time"]
+        }
+    }
+    """
+    command = {"action": "move_backward", "speed": speed, "time": time}
+    broadcaster.send_message(command)
+
+@openai_function
+def turn_left_backward(speed, angle, time):
+    """
+    {
+        "description": "Turns the robot left while moving backward at a given speed and angle.",
+        "is_conversational": false,
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "speed": {
+                    "type": "number",
+                    "description": "The speed to move while turning backward, an integer between 10 and 100."
+                },
+                "angle": {
+                    "type": "number",
+                    "description": "The angle to turn, an integer between 0 and 180."
+                },
+                "time": {
+                    "type": "number",
+                    "description": "The time in milliseconds to turn for, an integer between 1 and 5000."
+                }
+            },
+            "required": ["speed", "angle", "time"]
+        }
+    }
+    """
+    command = {"action": "turn_left_backward", "speed": speed, "angle": angle, "time": time}
+    broadcaster.send_message(command)
+
+@openai_function
+def turn_right_backward(speed, angle, time):
+    """
+    {
+        "description": "Turns the robot right while moving backward at a given speed and angle.",
+        "is_conversational": false,
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "speed": {
+                    "type": "number",
+                    "description": "The speed to move while turning backward, an integer between 10 and 100."
+                },
+                "angle": {
+                    "type": "number",
+                    "description": "The angle to turn, an integer between 0 and 180."
+                },
+                "time": {
+                    "type": "number",
+                    "description": "The time in milliseconds to turn for, an integer between 1 and 5000."
+                }
+            },
+            "required": ["speed", "angle", "time"]
+        }
+    }
+    """
+    command = {"action": "turn_right_backward", "speed": speed, "angle": angle, "time": time}
     broadcaster.send_message(command)
 
 @openai_function

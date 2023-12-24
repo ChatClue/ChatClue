@@ -20,7 +20,6 @@ def process_command(car, message):
         if isinstance(command, dict):
             action = command.get("action")
             time = command.get("time", 1) / 1000
-            print(time)
             if action == "move_forward":
                 car.move_forward(command.get("speed", 0), time)
             elif action == "move_backward":

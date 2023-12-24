@@ -6,6 +6,7 @@ import time
 import sounddevice as sd
 from vosk import KaldiRecognizer, Model
 from .audio_out import get_audio_out
+from celery_config import get_celery_app
 from integrations.openai.openai import OpenAIClient
 from integrations.openai.openai_conversation_builder import OpenAIConversationBuilder
 from utils.audio.helpers import contains_quiet_please_phrase, contains_wake_phrase, get_tool_not_found_phrase
@@ -349,4 +350,5 @@ class AudioProcessor:
             speakerType (str): "user" or "assistant", indicating who is speaking.
             response (str): The text of the response.
         """
-        store_conversation_task.delay(speaker_type=speaker_type, response=response)
+        get_celery_app().send_task('background.memory.tasks.store_conversation_task', args=[speaker_type, response])
+        logging.info("Store conversation task submitted to background")

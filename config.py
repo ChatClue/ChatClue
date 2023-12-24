@@ -1,6 +1,6 @@
 import logging
 
-LOG_LEVEL=logging.CRITICAL #Use logging.INFO or logging.DEBUG for verbose outputs in the terminal
+LOG_LEVEL=logging.INFO #Use logging.INFO or logging.DEBUG for verbose outputs in the terminal
 
 AUDIO_SETTINGS = {
     # List of phrases that, when detected, indicate a request for quiet or silence.
@@ -51,6 +51,14 @@ AUDIO_SETTINGS = {
 
     # The name of the sound input device to be used. 'default' uses the system's default device.
     "SOUND_DEVICE_DEVICE": "default"
+}
+
+VIDEO_SETTINGS = {
+    # This uses the cv2.VideoCapture method which takes the device as an argument. Typically, 0 is the primary camera. 
+    # This can also accept a file path to the video stream, or a stream URL. 
+    "DEVICE": 0,
+    # If you would like to see the video as it is streamed, set this to True. Otherwise, to run video processing in the background, set this to False.
+    "SHOW_VIDEO": False
 }
 
 OPENAI_SETTINGS = {
