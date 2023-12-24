@@ -27,68 +27,29 @@ class PiCarXMovements:
             return 'caution'
         return 'safe'
 
-    def move_forward(self, speed, time):
-        obstacle_status = self.detect_obstacle()
-        if obstacle_status == 'safe':
-            self.px.set_dir_servo_angle(0)
-            self.px.forward(speed)
-        elif obstacle_status == 'caution':
-            # Slow down and move forward cautiously
-            self.px.set_dir_servo_angle(0)
-            self.px.forward(speed // 2)
-        else:
-            # Stop in case of danger
-            self.stop()
-        self._set_timer(time)
-    
-    def turn_right(self, speed, angle, time):
-        obstacle_status = self.detect_obstacle()
-        if obstacle_status != 'danger':
-            # Proceed with turning right
-            self.px.set_dir_servo_angle(angle)
-            self.px.forward(speed)
-        else:
-            # Stop or make a different maneuver in case of danger
-            self.stop()
-        self._set_timer(time)
+    def move(self, direction, speed, angle, time):
+        """
+        Moves the car in a specified direction with a given speed, angle, and duration.
+        """
+        # Set the steering angle based on the input angle
+        self.px.set_dir_servo_angle(angle if direction == "forward" else -angle)
 
-    def turn_left(self, speed, angle, time):
+        # Check for obstacles
         obstacle_status = self.detect_obstacle()
-        if obstacle_status != 'danger':
-            # Proceed with turning left
-            self.px.set_dir_servo_angle(-angle)
-            self.px.forward(speed)
-        else:
-            # Stop or make a different maneuver in case of danger
-            self.stop()
-        self._set_timer(time)
 
-    def move_backward(self, speed, time):
-        # Generally, we assume backward movement is a response to an obstacle in front
-        self.px.set_dir_servo_angle(0)
-        self.px.backward(speed)
-        self._set_timer(time)
-    
-    def turn_left_backward(self, speed, angle, time):
-        obstacle_status = self.detect_obstacle()
-        if obstacle_status != 'danger':
-            # Turn left while moving backward
-            self.px.set_dir_servo_angle(-angle)
+        # Determine whether to move forward or backward based on the direction and obstacle status
+        if direction == "forward":
+            if obstacle_status == 'safe':
+                self.px.forward(speed)
+            elif obstacle_status == 'caution':
+                self.px.forward(speed // 2)  # Slower speed in caution state
+            else:
+                self.stop()  # Stop in case of danger
+        elif direction == "backward":
+            # Backward movement does not consider obstacles behind
             self.px.backward(speed)
-        else:
-            # Stop in case of danger
-            self.stop()
-        self._set_timer(time)
 
-    def turn_right_backward(self, speed, angle, time):
-        obstacle_status = self.detect_obstacle()
-        if obstacle_status != 'danger':
-            # Turn right while moving backward
-            self.px.set_dir_servo_angle(angle)
-            self.px.backward(speed)
-        else:
-            # Stop in case of danger
-            self.stop()
+        # Set a timer to stop the movement after the specified time
         self._set_timer(time)
 
     def tilt_head_up(self, angle_increment):
