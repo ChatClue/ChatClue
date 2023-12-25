@@ -133,14 +133,17 @@ class PiCarXMovements:
                 coordinate_x = Vilib.detect_obj_parameter['human_x']
                 # Adjust position to keep human in frame
                 self.adjust_position_to_keep_human_in_frame(coordinate_x)
-            time.sleep(0.05)
+            time.sleep(0.01)
 
     def adjust_position_to_keep_human_in_frame(self, x):
         self.is_adjusting = True
-        frame_center = 160  # Assuming a standard frame width of 640px
+        frame_center = 80  # Assuming a standard frame width of 640px
         deviation = x - frame_center
 
         # Continuously adjust position until deviation is within acceptable limits
+        print(f"Deviation: {abs(deviation)}")
+        print(f"Frame center: {frame_center*0.3}")
+        print(f"{abs(deviation) > frame_center * 0.3}")
         while abs(deviation) > frame_center * 0.1 and not self.is_moving:  # Adjust threshold as needed
             print(f"Adjusting position, deviation: {deviation}")
             turn_angle = -20 if deviation < 0 else 20  # Turn left for negative deviation, right for positive
@@ -153,7 +156,7 @@ class PiCarXMovements:
             else:
                 pass  # Stop adjusting if human is no longer detected
 
-            time.sleep(0.05)  # Adjust time as needed for responsiveness
+            time.sleep(0.01)  # Adjust time as needed for responsiveness
         self.is_adjusting = False
         self.stop()  # Stop the car once deviation is corrected
 
