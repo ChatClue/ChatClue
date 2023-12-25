@@ -12,6 +12,7 @@ class PiCarXMovements:
         self.tilt_angle = 0
         self.drive_angle = 0
         self.is_moving = False
+        self.is_adjusting = False
         self.move_timer = None
         self.focus_thread = None 
         self.stop_requested = False
@@ -128,17 +129,14 @@ class PiCarXMovements:
     def follow_the_human(self):
         Vilib.face_detect_switch(True)
         while not self.stop_requested:
-            if Vilib.detect_obj_parameter['human_n'] != 0:
+            if Vilib.detect_obj_parameter['human_n'] != 0 and not self.is_adjusting:
                 coordinate_x = Vilib.detect_obj_parameter['human_x']
-
                 # Adjust position to keep human in frame
                 self.adjust_position_to_keep_human_in_frame(coordinate_x)
-            else:
-                # Optionally, stop the car if no human is detected
-                self.stop()
             time.sleep(0.05)
 
     def adjust_position_to_keep_human_in_frame(self, x):
+        self.is_adjusting = True
         frame_center = 320  # Assuming a standard frame width of 640px
         deviation = x - frame_center
 
@@ -153,7 +151,7 @@ class PiCarXMovements:
                 coordinate_x = Vilib.detect_obj_parameter['human_x']
                 deviation = coordinate_x - frame_center
             else:
-                break  # Stop adjusting if human is no longer detected
+                pass  # Stop adjusting if human is no longer detected
 
             time.sleep(0.05)  # Adjust time as needed for responsiveness
 
