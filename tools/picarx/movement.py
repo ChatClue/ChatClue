@@ -41,7 +41,7 @@ def move_forward_or_backward_right_or_left(direction, speed, angle, time):
 def move_robot_head_up_down_left_or_right(tilt_increment, pan_increment):
     """
     {
-        "description": "Moves the robot's head by tilting it up or down and by turning it left or right based on the angle increments provided.",
+        "description": "Moves the robot's head by tilting it up or down and by turning it left or right based on the angle increments provided. To look straight ahead, use 0 for both angles.",
         "is_conversational": false,
         "parameters": {
             "type": "object",
