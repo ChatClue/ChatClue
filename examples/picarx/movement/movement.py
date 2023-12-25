@@ -143,7 +143,7 @@ class PiCarXMovements:
         deviation = x - frame_center
 
         # Continuously adjust position until deviation is within acceptable limits
-        while abs(deviation) > frame_center * 0.1 and not self.stop_requested:  # Adjust threshold as needed
+        while abs(deviation) > frame_center * 0.1 and not self.is_moving:  # Adjust threshold as needed
             print(f"Adjusting position, deviation: {deviation}")
             turn_angle = -20 if deviation < 0 else 20  # Turn left for negative deviation, right for positive
             self.move("forward", 50, turn_angle)  # Continuous movement
