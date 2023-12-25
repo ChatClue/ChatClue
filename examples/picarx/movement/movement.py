@@ -57,32 +57,35 @@ class PiCarXMovements:
         # Set a timer to stop the movement after the specified time
         self._set_timer(time)
 
-    def move_head(self, tilt_increment, pan_increment, step=1):
+    def move_head(self, tilt_angle, pan_angle, step=1):
         """
-        Adjusts the robot's head tilt and pan angles.
+        Adjusts the robot's head tilt and pan angles to the specified angles.
 
         Args:
-            tilt_increment (int): The angle increment to tilt the head up/down. Positive for up, negative for down.
-            pan_increment (int): The angle increment to turn the head left/right. Positive for right, negative for left.
+            tilt_angle (int): The target angle to tilt the head up/down.
+            pan_angle (int): The target angle to turn the head left/right.
             step (int): The step size for each movement (default 1 degree).
         """
-        target_tilt = self.clamp_number(self.tilt_angle + tilt_increment, -35, 35)
-        target_pan = self.clamp_number(self.pan_angle + pan_increment, -35, 35)
+        target_tilt = self.clamp_number(tilt_angle, -35, 35)
+        target_pan = self.clamp_number(pan_angle, -35, 35)
 
-        while self.tilt_angle != target_tilt or self.pan_angle != target_pan:
+        # Adjust the tilt angle to the target value
+        while self.tilt_angle != target_tilt:
             if self.tilt_angle < target_tilt:
                 self.tilt_angle = min(self.tilt_angle + step, target_tilt)
             elif self.tilt_angle > target_tilt:
                 self.tilt_angle = max(self.tilt_angle - step, target_tilt)
+            self.px.set_cam_tilt_angle(self.tilt_angle)
+            time.sleep(0.02)
 
+        # Adjust the pan angle to the target value
+        while self.pan_angle != target_pan:
             if self.pan_angle < target_pan:
                 self.pan_angle = min(self.pan_angle + step, target_pan)
             elif self.pan_angle > target_pan:
                 self.pan_angle = max(self.pan_angle - step, target_pan)
-
-            self.px.set_cam_tilt_angle(self.tilt_angle)
             self.px.set_cam_pan_angle(self.pan_angle)
-            time.sleep(0.05)
+            time.sleep(0.02)
         
     
 
