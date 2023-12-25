@@ -128,7 +128,6 @@ class PiCarXMovements:
     def follow_the_human(self):
         Vilib.face_detect_switch(True)
         while not self.stop_requested:
-            print("follow human")
             if Vilib.detect_obj_parameter['human_n'] != 0:
                 coordinate_x = Vilib.detect_obj_parameter['human_x']
 
@@ -147,7 +146,7 @@ class PiCarXMovements:
         while abs(deviation) > frame_center * 0.1 and not self.stop_requested:  # Adjust threshold as needed
             print(f"Adjusting position, deviation: {deviation}")
             turn_angle = -20 if deviation < 0 else 20  # Turn left for negative deviation, right for positive
-            self.move("forward", 50, turn_angle, None)  # Continuous movement
+            self.move("forward", 50, turn_angle)  # Continuous movement
 
             # Update deviation based on new human position
             if Vilib.detect_obj_parameter['human_n'] != 0:
