@@ -137,7 +137,7 @@ class PiCarXMovements:
 
     def adjust_position_to_keep_human_in_frame(self, x):
         self.is_adjusting = True
-        frame_center = 320  # Assuming a standard frame width of 640px
+        frame_center = 160  # Assuming a standard frame width of 640px
         deviation = x - frame_center
 
         # Continuously adjust position until deviation is within acceptable limits
