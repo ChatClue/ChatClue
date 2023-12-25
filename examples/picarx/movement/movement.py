@@ -63,11 +63,13 @@ class PiCarXMovements:
         # Adjust tilt angle and ensure it stays within the bounds
         self.px.set_cam_tilt_angle(0)
         self.px.set_cam_pan_angle(0)
+        self.tilt_angle = 0
         self.tilt_angle += tilt_increment
         self.tilt_angle = max(min(self.tilt_angle, 35), -35)
         self.px.set_cam_tilt_angle(self.tilt_angle)
 
         # Adjust pan angle and ensure it stays within the bounds
+        self.pan_angle = 0
         self.pan_angle += pan_increment
         self.pan_angle = max(min(self.pan_angle, 35), -35)
         self.px.set_cam_pan_angle(self.pan_angle)
