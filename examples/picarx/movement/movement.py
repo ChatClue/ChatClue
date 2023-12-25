@@ -86,7 +86,6 @@ class PiCarXMovements:
                 self.pan_angle = max(self.pan_angle - step, target_pan)
             self.px.set_cam_pan_angle(self.pan_angle)
             time.sleep(0.02)
-        
     
 
     def focus_on_human(self):
@@ -120,6 +119,60 @@ class PiCarXMovements:
         self.stop_requested = True
         if self.focus_thread.is_alive():
             self.focus_thread.join()
+            Vilib.face_detect_switch(False)
+
+    def follow_the_human(self):
+        Vilib.face_detect_switch(True)
+        while not self.stop_requested:
+            if Vilib.detect_obj_parameter['human_n'] != 0:
+                coordinate_x = Vilib.detect_obj_parameter['human_x']
+                coordinate_y = Vilib.detect_obj_parameter['human_y']
+                frame_width = Vilib.detect_obj_parameter['frame_w']
+                frame_height = Vilib.detect_obj_parameter['frame_h']
+
+                # Adjust pan and tilt angles to keep human centered in frame
+                self.adjust_pan_tilt_to_center_human(coordinate_x, coordinate_y, frame_width, frame_height)
+
+                # Determine if movement is needed to follow the human
+                self.adjust_position_to_follow_human(coordinate_x, frame_width)
+                time.sleep(0.05)
+            else:
+                # Optionally, stop the car if no human is detected
+                self.stop()
+                time.sleep(0.05)
+
+    def adjust_pan_tilt_to_center_human(self, x, y, frame_width, frame_height):
+        # Calculate the deviation from the center
+        deviation_x = (x - frame_width / 2) / frame_width
+        deviation_y = (y - frame_height / 2) / frame_height
+
+        # Adjust pan and tilt based on deviation
+        pan_change = deviation_x * 5  # Adjust sensitivity as needed
+        tilt_change = -deviation_y * 5  # Adjust sensitivity as needed
+        self.move_head(self.tilt_angle + tilt_change, self.pan_angle + pan_change)
+
+    def adjust_position_to_follow_human(self, x, frame_width):
+        # Decide whether to move forward, backward, or turn
+        if x < frame_width * 0.3:  # Human is on the left side
+            self.move("forward", 50, -20, 1)  # Turn left
+        elif x > frame_width * 0.7:  # Human is on the right side
+            self.move("forward", 50, 20, 1)  # Turn right
+
+    def start_follow_the_human(self):
+        """
+        Starts the human follow function in a separate thread.
+        """
+        self.stop_requested = False
+        self.follow_thread = threading.Thread(target=self.follow_the_human)
+        self.follow_thread.start()
+
+    def stop_follow_the_human(self):
+        """
+        Signals the human follow function to stop.
+        """
+        self.stop_requested = True
+        if self.follow_thread.is_alive():
+            self.follow_thread.join()
             Vilib.face_detect_switch(False)
 
 
