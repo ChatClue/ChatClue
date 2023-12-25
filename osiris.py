@@ -1,9 +1,11 @@
-from config import AUDIO_SETTINGS, CELERY_CONFIG, LOG_LEVEL
+from config import AUDIO_SETTINGS, CELERY_CONFIG, LOG_LEVEL, VIDEO_SETTINGS
+from utils.os.helpers import OSHelper
 from celery import Celery
 from celery_config import get_celery_app
 from database.setup import DatabaseSetup
 from broadcast.broadcaster import broadcaster
 from audio.audio_processor import AudioProcessor
+from video.video_processor import VideoProcessor
 from audio.audio_out import get_audio_out
 from utils.os.helpers import OSHelper
 from utils.text.welcome import welcome_message
@@ -13,6 +15,9 @@ import subprocess
 import atexit
 import sys
 import threading
+import time
+import cv2
+import queue
 
 from decorators.openai_decorators import openai_functions
 
@@ -87,11 +92,35 @@ def main():
         # Initialize the audio processor with the configuration settings
         logging.info("ROBOT THOUGHT: I am ready to begin.")
         audio_out.add_to_queue("Welcome to Project Osiris. I am ready to begin.")
+        # Start Audio processing
         audio_processor = AudioProcessor()
-        # Start processing the audio stream
         audio_thread = threading.Thread(target=audio_processor.process_stream)
         audio_thread.start()
+        # Start Video processing
+        video_processor = VideoProcessor()
+        video_thread = threading.Thread(target=video_processor.process_stream)
+        video_thread.start()
+        # Keep the main thread alive
+        try:
+            while True:
+                try:
+                    if VIDEO_SETTINGS.get('SHOW_VIDEO', False):
+                        frame = video_processor.frame_queue.get(timeout=0.1)
+                        cv2.imshow('Processed Video Stream', frame)
+                        if cv2.waitKey(1) & 0xFF == 27:
+                            break
+                except queue.Empty:
+                    pass 
+        except KeyboardInterrupt:
+            print("SHUTTING DOWN")
+            audio_processor.shutdown()
+            video_processor.shutdown()
+            print("SHUT DOWN")
+            logging.info("Program interrupted by user. Exiting...")
+        
         audio_thread.join()
+        video_thread.join()
+
     except KeyboardInterrupt:
         # Log the termination of the process
         logging.info("\nDone")
@@ -100,6 +129,7 @@ def main():
         stop_celery_worker(celery_worker)
         audio_out.shutdown()
         broadcaster.shutdown()
+        OSHelper.system_file_cleanup()
         sys.exit(0)
 
 # Standard Python idiom for running the main function

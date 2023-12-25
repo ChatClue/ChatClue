@@ -7,7 +7,6 @@ import queue
 import threading
 import time
 import logging
-import uuid
 
 class AudioOutput:
     """

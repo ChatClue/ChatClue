@@ -48,6 +48,7 @@ class AudioProcessor:
         self.last_wake_time = 0
         self.last_response_end_time = 0
         self.processing_openai_request = False
+        self.shutdown_event = threading.Event()
 
     def open_dump_file(self):
         """Opens the file to dump audio input if a filename is provided."""
@@ -108,7 +109,7 @@ class AudioProcessor:
                 rec = KaldiRecognizer(self.model, self.samplerate)
                 openai_stream_thread = None
 
-                while True:
+                while not self.shutdown_event.is_set():
                     data, current_time = self.get_audio_data()
                     result = self.process_recognition(data, rec)
 
@@ -352,3 +353,6 @@ class AudioProcessor:
         """
         get_celery_app().send_task('background.memory.tasks.store_conversation_task', args=[speaker_type, response])
         logging.info("Store conversation task submitted to background")
+
+    def shutdown(self):
+        self.shutdown_event.set()

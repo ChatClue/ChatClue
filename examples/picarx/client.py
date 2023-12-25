@@ -1,6 +1,7 @@
 import asyncio
 import websockets
 import json
+from vilib import Vilib
 from movement.movement import PiCarXMovements
 
 async def listen():
@@ -40,4 +41,9 @@ def process_command(car, message):
         print("Not a JSON command")
 
 if __name__ == "__main__":
-    asyncio.get_event_loop().run_until_complete(listen())
+    try:
+        Vilib.camera_start(vflip=False,hflip=False)
+        Vilib.display(local=True,web=True)
+        asyncio.get_event_loop().run_until_complete(listen())
+    finally:
+        Vilib.camera_close()
