@@ -35,33 +35,34 @@ class PiCarXMovements:
             return 'caution'
         return 'safe'
 
-    def move(self, direction, speed, angle, time_to_move=0):
+    def move(self, direction, speed, angle, time_to_move=0, callback=None):
         """
-        Moves the car in a specified direction with a given speed, angle, and duration.
+        Moves the car in a specified direction with a given speed and angle.
+        If a callback is provided, it will be called at the specified interval.
         """
         self.is_moving = True
-        # Adjust the steering angle based on the input angle relative to its current position
-        self.drive_angle = self.clamp_number(self.drive_angle + angle, -35, 35)
+        self.drive_angle = self.clamp_number(self.drive_angle + angle, -40, 40)
         self.px.set_dir_servo_angle(self.drive_angle)
 
-        # Check for obstacles
-        obstacle_status = self.detect_obstacle()
-
-        # Determine whether to move forward or backward based on the direction and obstacle status
         if direction == "forward":
-            if obstacle_status == 'safe':
-                self.px.forward(speed)
-            elif obstacle_status == 'caution':
-                self.px.forward(speed // 2)  # Slower speed in caution state
-            else:
-                self.stop()  # Stop in case of danger
+            self.px.forward(speed)
         elif direction == "backward":
-            # Backward movement does not consider obstacles behind
             self.px.backward(speed)
 
-        # Set a timer to stop the movement after the specified time
-        if time_to_move > 0:
-            self._set_timer(time_to_move)
+        if callback:
+            self._start_callback_thread(callback)
+    
+    def _start_callback_thread(self, callback, interval):
+        """
+        Starts a thread to continuously execute the callback function at the given interval.
+        """
+        def callback_thread():
+            while self.is_moving:
+                callback()
+                time.sleep(interval)
+
+        thread = threading.Thread(target=callback_thread)
+        thread.start()
 
     def move_head(self, tilt_angle, pan_angle, step=1):
         """
@@ -132,7 +133,6 @@ class PiCarXMovements:
         while not self.stop_requested:
             if Vilib.detect_obj_parameter['human_n'] != 0 and not self.is_adjusting:
                 coordinate_x = Vilib.detect_obj_parameter['human_x']
-                # Adjust position to keep human in frame
                 self.adjust_position_to_keep_human_in_frame(coordinate_x)
             time.sleep(0.01)
 
@@ -142,35 +142,40 @@ class PiCarXMovements:
         deviation = x - frame_center
         last_known_direction = None
 
-        # Continuously adjust position until deviation is corrected or human is lost from frame
         while True:
             if Vilib.detect_obj_parameter['human_n'] != 0:
-                # Update deviation based on current human position
                 coordinate_x = Vilib.detect_obj_parameter['human_x']
                 deviation = coordinate_x - frame_center
 
-                # Check if deviation is within acceptable limits
                 if abs(deviation) <= frame_center * 0.1:
-                    break  # Deviation corrected, stop adjusting
+                    break
 
-                # Adjust position based on current deviation
                 turn_angle = -20 if deviation < 0 else 20
                 last_known_direction = turn_angle
-                self.move("forward", 20, turn_angle)
+                self.move("forward", 50, turn_angle, callback=self.check_deviation_correction)
 
             else:
-                # If human is lost from frame, continue in last known direction briefly
-                if last_known_direction and not self.is_moving:
-                    print("Lost track of human, continuing last movement...")
-                    self.move("forward", 50, last_known_direction)
-                    time.sleep(1)  # Continue for 1 second
+                if last_known_direction is not None and not self.is_moving:
+                    self.move("forward", 50, last_known_direction, callback=self.check_deviation_correction)
                 else:
-                    break  # Human not found, stop adjusting
+                    break
 
-            time.sleep(0.01)  # Adjust time as needed for responsiveness
+            time.sleep(0.01)
 
         self.is_adjusting = False
-        self.stop()  # Stop the car
+        self.stop()
+
+    def check_deviation_correction(self):
+        """
+        Callback function to check if the deviation has been corrected.
+        """
+        if Vilib.detect_obj_parameter['human_n'] != 0:
+            coordinate_x = Vilib.detect_obj_parameter['human_x']
+            frame_center = 320
+            deviation = coordinate_x - frame_center
+            if abs(deviation) <= frame_center * 0.1:
+                self.stop()
+
 
 
     def start_follow_the_human(self):
@@ -194,7 +199,6 @@ class PiCarXMovements:
     def stop(self):
         if self.move_timer is not None:
             self.move_timer.cancel()
-            self.move_timer = None
         self.px.stop()
         self.is_moving = False
     
