@@ -19,23 +19,22 @@ def process_command(car, message):
         command = json.loads(message)
         if isinstance(command, dict):
             action = command.get("action")
-            time = command.get("time", 1) / 1000
-            if action == "move_forward":
-                car.move_forward(command.get("speed", 0), time)
-            elif action == "move_backward":
-                car.move_backward(command.get("speed", 0), time)
-            elif action == "turn_left":
-                car.turn_left(command.get("speed", 0), command.get("angle", 0), time)
-            elif action == "turn_right":
-                car.turn_right(command.get("speed", 0), command.get("angle", 0), time)
+            time = command.get("time", 1) / 1000  # Convert milliseconds to seconds
+            speed = command.get("speed", 0)
+            angle = command.get("angle", 0)
+            angle_increment = command.get("angle_increment", 0)
+
+            if action in ["move_forward", "move_backward"]:
+                direction = "forward" if action == "move_forward" else "backward"
+                car.move(direction, speed, angle, time)
             elif action == "tilt_head_up":
-                car.tilt_head_up(command.get("angle_increment", 0))
+                car.tilt_head_up(angle_increment)
             elif action == "tilt_head_down":
-                car.tilt_head_down(command.get("angle_increment", 0))
+                car.tilt_head_down(angle_increment)
             elif action == "turn_head_left":
-                car.turn_head_left(command.get("angle_increment", 0))
+                car.turn_head_left(angle_increment)
             elif action == "turn_head_right":
-                car.turn_head_right(command.get("angle_increment", 0))
+                car.turn_head_right(angle_increment)
             elif action == "stop":
                 car.stop()
         else: 
