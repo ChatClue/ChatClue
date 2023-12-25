@@ -126,37 +126,27 @@ class PiCarXMovements:
         while not self.stop_requested:
             if Vilib.detect_obj_parameter['human_n'] != 0:
                 coordinate_x = Vilib.detect_obj_parameter['human_x']
-                coordinate_y = Vilib.detect_obj_parameter['human_y']
-                frame_width = Vilib.detect_obj_parameter['frame_w']
-                frame_height = Vilib.detect_obj_parameter['frame_h']
 
-                # Adjust pan and tilt angles to keep human centered in frame
-                self.adjust_pan_tilt_to_center_human(coordinate_x, coordinate_y, frame_width, frame_height)
+                # Update pan and tilt to focus on the human
+                self.focus_on_human()
 
-                # Determine if movement is needed to follow the human
-                self.adjust_position_to_follow_human(coordinate_x, frame_width)
+                # Determine if the car needs to move to follow the human
+                self.adjust_position_to_keep_human_in_frame(coordinate_x)
                 time.sleep(0.05)
             else:
                 # Optionally, stop the car if no human is detected
                 self.stop()
                 time.sleep(0.05)
 
-    def adjust_pan_tilt_to_center_human(self, x, y, frame_width, frame_height):
-        # Calculate the deviation from the center
-        deviation_x = (x - frame_width / 2) / frame_width
-        deviation_y = (y - frame_height / 2) / frame_height
+    def adjust_position_to_keep_human_in_frame(self, x):
+        # Calculate deviation from the center
+        frame_center = 320  # Assuming a standard frame width of 640px
+        deviation = x - frame_center
 
-        # Adjust pan and tilt based on deviation
-        pan_change = deviation_x * 5  # Adjust sensitivity as needed
-        tilt_change = -deviation_y * 5  # Adjust sensitivity as needed
-        self.move_head(self.tilt_angle + tilt_change, self.pan_angle + pan_change)
-
-    def adjust_position_to_follow_human(self, x, frame_width):
         # Decide whether to move forward, backward, or turn
-        if x < frame_width * 0.3:  # Human is on the left side
-            self.move("forward", 50, -20, 1)  # Turn left
-        elif x > frame_width * 0.7:  # Human is on the right side
-            self.move("forward", 50, 20, 1)  # Turn right
+        if abs(deviation) > frame_center * 0.3:  # Human is significantly off-center
+            turn_angle = -20 if deviation < 0 else 20  # Turn left if deviation is negative, right if positive
+            self.move("forward", POWER, turn_angle, 1)
 
     def start_follow_the_human(self):
         """
