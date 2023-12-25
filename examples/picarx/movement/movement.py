@@ -40,8 +40,8 @@ class PiCarXMovements:
         """
         self.is_moving = True
         # Adjust the steering angle based on the input angle relative to its current position
-        self.current_servo_angle = self.clamp_number(self.current_servo_angle + angle, -35, 35)
-        self.px.set_dir_servo_angle(self.current_servo_angle)
+        self.drive_angle = self.clamp_number(self.drive_angle + angle, -35, 35)
+        self.px.set_dir_servo_angle(self.drive_angle)
 
         # Check for obstacles
         obstacle_status = self.detect_obstacle()
