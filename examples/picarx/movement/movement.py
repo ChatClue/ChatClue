@@ -124,13 +124,11 @@ class PiCarXMovements:
     def follow_the_human(self):
         Vilib.face_detect_switch(True)
         while not self.stop_requested:
+            print("follow human")
             if Vilib.detect_obj_parameter['human_n'] != 0:
                 coordinate_x = Vilib.detect_obj_parameter['human_x']
 
-                # Update pan and tilt to focus on the human
-                self.focus_on_human()
-
-                # Determine if the car needs to move to follow the human
+                # Adjust position to keep human in frame
                 self.adjust_position_to_keep_human_in_frame(coordinate_x)
                 time.sleep(0.05)
             else:
@@ -144,6 +142,9 @@ class PiCarXMovements:
         deviation = x - frame_center
 
         # Decide whether to move forward, backward, or turn
+        print(f"Deviation: {abs(deviation)}")
+        print(f"Frame center: {frame_center*0.3}")
+        print(f"{abs(deviation) > frame_center * 0.3}")
         if abs(deviation) > frame_center * 0.3:  # Human is significantly off-center
             turn_angle = -20 if deviation < 0 else 20  # Turn left if deviation is negative, right if positive
             self.move("forward", 50, turn_angle, 1)
@@ -164,7 +165,6 @@ class PiCarXMovements:
         if self.follow_thread.is_alive():
             self.follow_thread.join()
             Vilib.face_detect_switch(False)
-
 
     def stop(self):
         if self.move_timer is not None:
