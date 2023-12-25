@@ -146,7 +146,7 @@ class PiCarXMovements:
         # Decide whether to move forward, backward, or turn
         if abs(deviation) > frame_center * 0.3:  # Human is significantly off-center
             turn_angle = -20 if deviation < 0 else 20  # Turn left if deviation is negative, right if positive
-            self.move("forward", POWER, turn_angle, 1)
+            self.move("forward", 50, turn_angle, 1)
 
     def start_follow_the_human(self):
         """
