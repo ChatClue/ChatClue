@@ -107,7 +107,7 @@ class PiCarXMovements:
                 self.px.set_cam_pan_angle(self.pan_angle)
                 self.px.set_cam_tilt_angle(self.tilt_angle)
                 
-            time.sleep(0.05)
+            time.sleep(0.01)
     
     def start_focus_on_human(self):
         """
@@ -115,6 +115,7 @@ class PiCarXMovements:
         """
         self.stop_requested = False
         self.focus_thread = threading.Thread(target=self.focus_on_human)
+        self.focus_thread.daemon = True
         self.focus_thread.start()
 
     def stop_focus_on_human(self):
@@ -139,26 +140,38 @@ class PiCarXMovements:
         self.is_adjusting = True
         frame_center = 320  # Assuming a standard frame width of 640px
         deviation = x - frame_center
+        last_known_direction = None
 
-        # Continuously adjust position until deviation is within acceptable limits
-        print(f"Deviation: {abs(deviation)}")
-        print(f"Frame center: {frame_center*0.3}")
-        print(f"{abs(deviation) > frame_center * 0.3}")
-        while abs(deviation) > frame_center * 0.1:  # Adjust threshold as needed
-            print(f"Adjusting position, deviation: {deviation}")
-            turn_angle = -20 if deviation < 0 else 20  # Turn left for negative deviation, right for positive
-            self.move("forward", 50, turn_angle)  # Continuous movement
-
-            # Update deviation based on new human position
+        # Continuously adjust position until deviation is corrected or human is lost from frame
+        while True:
             if Vilib.detect_obj_parameter['human_n'] != 0:
+                # Update deviation based on current human position
                 coordinate_x = Vilib.detect_obj_parameter['human_x']
                 deviation = coordinate_x - frame_center
+
+                # Check if deviation is within acceptable limits
+                if abs(deviation) <= frame_center * 0.1:
+                    break  # Deviation corrected, stop adjusting
+
+                # Adjust position based on current deviation
+                turn_angle = -20 if deviation < 0 else 20
+                last_known_direction = turn_angle
+                self.move("forward", 20, turn_angle)
+
             else:
-                break  # Stop adjusting if human is no longer detected
+                # If human is lost from frame, continue in last known direction briefly
+                if last_known_direction and not self.is_moving:
+                    print("Lost track of human, continuing last movement...")
+                    self.move("forward", 50, last_known_direction)
+                    time.sleep(1)  # Continue for 1 second
+                else:
+                    break  # Human not found, stop adjusting
 
             time.sleep(0.01)  # Adjust time as needed for responsiveness
+
         self.is_adjusting = False
-        self.stop()  # Stop the car once deviation is corrected
+        self.stop()  # Stop the car
+
 
     def start_follow_the_human(self):
         """
@@ -166,6 +179,7 @@ class PiCarXMovements:
         """
         self.stop_requested = False
         self.follow_thread = threading.Thread(target=self.follow_the_human)
+        self.follow_thread.daemon = True
         self.follow_thread.start()
 
     def stop_follow_the_human(self):
