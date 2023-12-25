@@ -154,7 +154,7 @@ class PiCarXMovements:
                 pass  # Stop adjusting if human is no longer detected
 
             time.sleep(0.05)  # Adjust time as needed for responsiveness
-
+        self.is_adjusting = False
         self.stop()  # Stop the car once deviation is corrected
 
     def start_follow_the_human(self):
