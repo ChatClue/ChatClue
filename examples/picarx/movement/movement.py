@@ -10,6 +10,7 @@ class PiCarXMovements:
         self.px = Picarx()
         self.pan_angle = 0
         self.tilt_angle = 0
+        self.drive_angle = 0
         self.is_moving = False
         self.move_timer = None
         self.focus_thread = None 
@@ -38,8 +39,9 @@ class PiCarXMovements:
         Moves the car in a specified direction with a given speed, angle, and duration.
         """
         self.is_moving = True
-        # Set the steering angle based on the input angle
-        self.px.set_dir_servo_angle(angle)
+        # Adjust the steering angle based on the input angle relative to its current position
+        self.current_servo_angle = self.clamp_number(self.current_servo_angle + angle, -35, 35)
+        self.px.set_dir_servo_angle(self.current_servo_angle)
 
         # Check for obstacles
         obstacle_status = self.detect_obstacle()
@@ -149,7 +151,7 @@ class PiCarXMovements:
         print(f"{abs(deviation) > frame_center * 0.3}")
         if abs(deviation) > frame_center * 0.3 and not self.is_moving:  # Human is significantly off-center
             turn_angle = -20 if deviation < 0 else 20  # Turn left if deviation is negative, right if positive
-            self.move("forward", 50, turn_angle, 100)
+            self.move("forward", 50, turn_angle, 500)
 
     def start_follow_the_human(self):
         """
@@ -172,6 +174,10 @@ class PiCarXMovements:
         if self.move_timer is not None:
             self.move_timer.cancel()
             self.move_timer = None
-        self.px.set_dir_servo_angle(0)
         self.px.stop()
         self.is_moving = False
+    
+    def reset(self):
+        self.px.set_dir_servo_angle(0)
+        self.px.set_cam_tilt_angle(0)
+        self.px.set_cam_pan_angle(0)

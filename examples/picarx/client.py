@@ -66,3 +66,4 @@ if __name__ == "__main__":
     finally:
         Vilib.camera_close()
         stop_following_human(car)
+        car.reset()
