@@ -37,8 +37,8 @@ def move_forward_or_backward_right_or_left(direction, speed, angle, time):
     command = {"action": action, "speed": speed, "angle": angle, "time": time}
     broadcaster.send_message(command)
 
-
-def look_up_down_left_or_right(tilt_increment, pan_increment):
+@openai_function
+def move_robot_head_up_down_left_or_right(tilt_increment, pan_increment):
     """
     {
         "description": "Moves the robot's head by tilting it up or down and by turning it left or right based on the angle increments provided.",
