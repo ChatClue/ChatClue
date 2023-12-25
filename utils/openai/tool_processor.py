@@ -55,6 +55,7 @@ class ToolProcessor:
 
         # Attempt to execute the tool function
         try:
+            print(f"Running tool function {tool_name} with arguments: {arguments}")
             response["function_result"] = tool_function(**arguments)
             response["success"] = True
         except TypeError as e:

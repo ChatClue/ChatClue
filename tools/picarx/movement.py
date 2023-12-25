@@ -3,10 +3,10 @@ from broadcast.broadcaster import broadcaster
 
 
 @openai_function
-def move(direction, speed, angle, time):
+def move_forward_or_backward_right_or_left(direction, speed, angle, time):
     """
     {
-        "description": "Moves the robot in a specified direction at a given speed and angle.",
+        "description": "Moves the robot in a specified direction at a given speed and angle. The user can say things like move forward, make a left, turn right, etc.",
         "is_conversational": false,
         "parameters": {
             "type": "object",
@@ -22,7 +22,7 @@ def move(direction, speed, angle, time):
                 },
                 "angle": {
                     "type": "number",
-                    "description": "The angle to turn while moving, an integer between -180 and 180. Positive for right, negative for left."
+                    "description": "Provide a number between -40 and 40. If you want to turn left, use a negative number. If you want to turn right, use a positive number."
                 },
                 "time": {
                     "type": "number",

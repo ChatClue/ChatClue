@@ -32,7 +32,7 @@ class PiCarXMovements:
         Moves the car in a specified direction with a given speed, angle, and duration.
         """
         # Set the steering angle based on the input angle
-        self.px.set_dir_servo_angle(angle if direction == "forward" else -angle)
+        self.px.set_dir_servo_angle(angle)
 
         # Check for obstacles
         obstacle_status = self.detect_obstacle()
