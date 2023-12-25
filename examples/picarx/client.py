@@ -4,9 +4,9 @@ import json
 from vilib import Vilib
 from movement.movement import PiCarXMovements
 
-async def listen():
+async def listen(car):
     uri = "ws://192.168.86.38:8765/websocket"
-    car = PiCarXMovements()
+    car.start_focus_on_human()  # Start following human
 
     while True:
         try:
@@ -15,7 +15,9 @@ async def listen():
                 while True:
                     message = await websocket.recv()
                     print(f"Message received: {message}")
+                    car.stop_focus_on_human()  # Stop following human to process command
                     process_command(car, message)
+                    car.start_focus_on_human()  # Resume following human
         except websockets.ConnectionClosed:
             print("WebSocket connection closed. Reconnecting...")
             await asyncio.sleep(5)  # Wait 5 seconds before trying to reconnect
@@ -47,9 +49,11 @@ def process_command(car, message):
         print("Not a JSON command")
 
 if __name__ == "__main__":
+    car = PiCarXMovements()  # Initialize car object
     try:
         Vilib.camera_start(vflip=False,hflip=False)
         Vilib.display(local=True,web=True)
         asyncio.get_event_loop().run_until_complete(listen())
     finally:
         Vilib.camera_close()
+        car.stop_focus_on_human()

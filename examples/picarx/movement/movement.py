@@ -1,8 +1,7 @@
 from picarx import Picarx
+from vilib import Vilib
 import threading
 import time
-
-POWER = 50
 SAFE_DISTANCE = 40   # Distance in cm, > 40 is considered safe
 DANGER_DISTANCE = 20 # Distance in cm, between 20 and 40 indicates caution, < 20 indicates danger
 
@@ -12,6 +11,12 @@ class PiCarXMovements:
         self.pan_angle = 0
         self.tilt_angle = 0
         self.move_timer = None
+        self.focus_thread = None 
+        self.stop_requested = False
+    
+    @staticmethod
+    def clamp_number(num, a, b):
+        return max(min(num, max(a, b)), min(a, b))
 
     def _set_timer(self, time=1.5):
         if self.move_timer is not None:
@@ -52,27 +57,68 @@ class PiCarXMovements:
         # Set a timer to stop the movement after the specified time
         self._set_timer(time)
 
-    def move_head(self, tilt_increment, pan_increment):
+    def move_head(self, tilt_increment, pan_increment, step=1):
         """
         Adjusts the robot's head tilt and pan angles.
 
         Args:
             tilt_increment (int): The angle increment to tilt the head up/down. Positive for up, negative for down.
             pan_increment (int): The angle increment to turn the head left/right. Positive for right, negative for left.
+            step (int): The step size for each movement (default 1 degree).
         """
-        # Adjust tilt angle and ensure it stays within the bounds
-        self.px.set_cam_tilt_angle(0)
-        self.px.set_cam_pan_angle(0)
-        self.tilt_angle = 0
-        self.tilt_angle += tilt_increment
-        self.tilt_angle = max(min(self.tilt_angle, 35), -35)
-        self.px.set_cam_tilt_angle(self.tilt_angle)
+        target_tilt = self.clamp_number(self.tilt_angle + tilt_increment, -35, 35)
+        target_pan = self.clamp_number(self.pan_angle + pan_increment, -35, 35)
 
-        # Adjust pan angle and ensure it stays within the bounds
-        self.pan_angle = 0
-        self.pan_angle += pan_increment
-        self.pan_angle = max(min(self.pan_angle, 35), -35)
-        self.px.set_cam_pan_angle(self.pan_angle)
+        while self.tilt_angle != target_tilt or self.pan_angle != target_pan:
+            if self.tilt_angle < target_tilt:
+                self.tilt_angle = min(self.tilt_angle + step, target_tilt)
+            elif self.tilt_angle > target_tilt:
+                self.tilt_angle = max(self.tilt_angle - step, target_tilt)
+
+            if self.pan_angle < target_pan:
+                self.pan_angle = min(self.pan_angle + step, target_pan)
+            elif self.pan_angle > target_pan:
+                self.pan_angle = max(self.pan_angle - step, target_pan)
+
+            self.px.set_cam_tilt_angle(self.tilt_angle)
+            self.px.set_cam_pan_angle(self.pan_angle)
+            time.sleep(0.05)
+        
+    
+
+    def focus_on_human(self):
+        Vilib.face_detect_switch(True)
+        while not self.stop_requested:
+            if Vilib.detect_obj_parameter['human_n'] != 0:
+                coordinate_x = Vilib.detect_obj_parameter['human_x']
+                coordinate_y = Vilib.detect_obj_parameter['human_y']
+
+                # Use clamp_number method for adjusting the pan-tilt angle
+                self.pan_angle = self.clamp_number(self.pan_angle + (coordinate_x * 10 / 640) - 5, -35, 35)
+                self.tilt_angle = self.clamp_number(self.tilt_angle - (coordinate_y * 10 / 480) + 5, -35, 35)
+                self.px.set_cam_pan_angle(self.pan_angle)
+                self.px.set_cam_tilt_angle(self.tilt_angle)
+                time.sleep(0.05)
+            else:
+                time.sleep(0.05)
+    
+    def start_focus_on_human(self):
+        """
+        Starts the human focus function in a separate thread.
+        """
+        self.stop_requested = False
+        self.focus_thread = threading.Thread(target=self.focus_on_human)
+        self.focus_thread.start()
+
+    def stop_focus_on_human(self):
+        """
+        Signals the human focus function to stop.
+        """
+        self.stop_requested = True
+        if self.focus_thread.is_alive():
+            self.focus_thread.join()
+            Vilib.face_detect_switch(False)
+
 
     def stop(self):
         if self.move_timer is not None:
