@@ -34,7 +34,7 @@ class PiCarXMovements:
             return 'caution'
         return 'safe'
 
-    def move(self, direction, speed, angle, time_to_move):
+    def move(self, direction, speed, angle, time_to_move=0):
         """
         Moves the car in a specified direction with a given speed, angle, and duration.
         """
