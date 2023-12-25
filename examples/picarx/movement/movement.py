@@ -34,7 +34,7 @@ class PiCarXMovements:
             return 'caution'
         return 'safe'
 
-    def move(self, direction, speed, angle, time):
+    def move(self, direction, speed, angle, time_to_move):
         """
         Moves the car in a specified direction with a given speed, angle, and duration.
         """
@@ -59,7 +59,8 @@ class PiCarXMovements:
             self.px.backward(speed)
 
         # Set a timer to stop the movement after the specified time
-        self._set_timer(time)
+        if time_to_move > 0:
+            self._set_timer(time_to_move)
 
     def move_head(self, tilt_angle, pan_angle, step=1):
         """
@@ -104,9 +105,8 @@ class PiCarXMovements:
                 self.tilt_angle = self.clamp_number(self.tilt_angle - (coordinate_y * 10 / 480) + 5, -35, 35)
                 self.px.set_cam_pan_angle(self.pan_angle)
                 self.px.set_cam_tilt_angle(self.tilt_angle)
-                time.sleep(0.05)
-            else:
-                time.sleep(0.05)
+                
+            time.sleep(0.05)
     
     def start_focus_on_human(self):
         """
@@ -134,24 +134,31 @@ class PiCarXMovements:
 
                 # Adjust position to keep human in frame
                 self.adjust_position_to_keep_human_in_frame(coordinate_x)
-                time.sleep(0.05)
             else:
                 # Optionally, stop the car if no human is detected
                 self.stop()
-                time.sleep(0.05)
+            time.sleep(0.05)
 
     def adjust_position_to_keep_human_in_frame(self, x):
-        # Calculate deviation from the center
         frame_center = 320  # Assuming a standard frame width of 640px
         deviation = x - frame_center
 
-        # Decide whether to move forward, backward, or turn
-        print(f"Deviation: {abs(deviation)}")
-        print(f"Frame center: {frame_center*0.3}")
-        print(f"{abs(deviation) > frame_center * 0.3}")
-        if abs(deviation) > frame_center * 0.3 and not self.is_moving:  # Human is significantly off-center
-            turn_angle = -20 if deviation < 0 else 20  # Turn left if deviation is negative, right if positive
-            self.move("forward", 50, turn_angle, 500)
+        # Continuously adjust position until deviation is within acceptable limits
+        while abs(deviation) > frame_center * 0.1 and not self.stop_requested:  # Adjust threshold as needed
+            print(f"Adjusting position, deviation: {deviation}")
+            turn_angle = -20 if deviation < 0 else 20  # Turn left for negative deviation, right for positive
+            self.move("forward", 50, turn_angle, None)  # Continuous movement
+
+            # Update deviation based on new human position
+            if Vilib.detect_obj_parameter['human_n'] != 0:
+                coordinate_x = Vilib.detect_obj_parameter['human_x']
+                deviation = coordinate_x - frame_center
+            else:
+                break  # Stop adjusting if human is no longer detected
+
+            time.sleep(0.05)  # Adjust time as needed for responsiveness
+
+        self.stop()  # Stop the car once deviation is corrected
 
     def start_follow_the_human(self):
         """
