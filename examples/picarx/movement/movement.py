@@ -38,7 +38,7 @@ class PiCarXMovements:
     def move(self, direction, speed, angle, time_to_move=0, callback=None):
         """
         Moves the car in a specified direction with a given speed and angle.
-        If a callback is provided, it will be called at the specified interval.
+        If a callback is provided
         """
         self.is_moving = True
         self.drive_angle = self.clamp_number(self.drive_angle + angle, -40, 40)
@@ -52,14 +52,14 @@ class PiCarXMovements:
         if callback:
             self._start_callback_thread(callback)
     
-    def _start_callback_thread(self, callback, interval):
+    def _start_callback_thread(self, callback):
         """
         Starts a thread to continuously execute the callback function at the given interval.
         """
         def callback_thread():
             while self.is_moving:
                 callback()
-                time.sleep(interval)
+                time.sleep(0.01)
 
         thread = threading.Thread(target=callback_thread)
         thread.start()
