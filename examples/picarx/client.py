@@ -22,19 +22,16 @@ def process_command(car, message):
             time = command.get("time", 1) / 1000  # Convert milliseconds to seconds
             speed = command.get("speed", 0)
             angle = command.get("angle", 0)
-            angle_increment = command.get("angle_increment", 0)
+            tilt_increment = command.get("tilt_increment", 0)
+            pan_increment = command.get("pan_increment", 0)
 
             if action in ["move_forward", "move_backward"]:
                 direction = "forward" if action == "move_forward" else "backward"
                 car.move(direction, speed, angle, time)
-            elif action == "tilt_head_up":
-                car.tilt_head_up(angle_increment)
-            elif action == "tilt_head_down":
-                car.tilt_head_down(angle_increment)
-            elif action == "turn_head_left":
-                car.turn_head_left(angle_increment)
-            elif action == "turn_head_right":
-                car.turn_head_right(angle_increment)
+            elif action == "move_head":
+                tilt_increment = tilt_increment
+                pan_increment = pan_increment
+                car.move_head(tilt_increment, pan_increment)
             elif action == "stop":
                 car.stop()
         else: 

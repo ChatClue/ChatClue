@@ -38,88 +38,32 @@ def move_forward_or_backward_right_or_left(direction, speed, angle, time):
     broadcaster.send_message(command)
 
 
-@openai_function
-def tilt_head_up(angle_increment):
+def look_up_down_left_or_right(tilt_increment, pan_increment):
     """
     {
-        "description": "Tilts the robot's head up by a specified angle increment.",
+        "description": "Moves the robot's head by tilting it up or down and by turning it left or right based on the angle increments provided.",
         "is_conversational": false,
         "parameters": {
             "type": "object",
             "properties": {
-                "angle_increment": {
+                "tilt_increment": {
                     "type": "number",
-                    "description": "The angle increment to tilt the head up, an integer between 1 and 35."
+                    "description": "The angle increment to tilt the head up or down, an integer between -40 and 40."
+                },
+                "pan_increment": {
+                    "type": "number",
+                    "description": "The angle increment to turn the head left or right, an integer between -40 and 40."
                 }
             },
-            "required": ["angle_increment"]
+            "required": ["tilt_increment", "pan_increment"]
         }
     }
     """
-    command = {"action": "tilt_head_up", "angle_increment": angle_increment}
-    broadcaster.send_message(command)
-
-@openai_function
-def tilt_head_down(angle_increment):
-    """
-    {
-        "description": "Tilts the robot's head down by a specified angle increment.",
-        "is_conversational": false,
-        "parameters": {
-            "type": "object",
-            "properties": {
-                "angle_increment": {
-                    "type": "number",
-                    "description": "The angle increment to tilt the head down, an integer between 1 and 35."
-                }
-            },
-            "required": ["angle_increment"]
-        }
+    command = {
+        "action": "move_head", 
+        "tilt_increment": tilt_increment, 
+        "pan_increment": pan_increment
     }
-    """
-    command = {"action": "tilt_head_down", "angle_increment": angle_increment}
-    broadcaster.send_message(command)
-
-@openai_function
-def turn_head_left(angle_increment):
-    """
-    {
-        "description": "Turns the robot's head to the left by a specified angle increment.",
-        "is_conversational": false,
-        "parameters": {
-            "type": "object",
-            "properties": {
-                "angle_increment": {
-                    "type": "number",
-                    "description": "The angle increment to turn the head left, an integer between 1 and 35."
-                }
-            },
-            "required": ["angle_increment"]
-        }
-    }
-    """
-    command = {"action": "turn_head_left", "angle_increment": angle_increment}
-    broadcaster.send_message(command)
-
-@openai_function
-def turn_head_right(angle_increment):
-    """
-    {
-        "description": "Turns the robot's head to the right by a specified angle increment.",
-        "is_conversational": false,
-        "parameters": {
-            "type": "object",
-            "properties": {
-                "angle_increment": {
-                    "type": "number",
-                    "description": "The angle increment to turn the head right, an integer between 1 and 35."
-                }
-            },
-            "required": ["angle_increment"]
-        }
-    }
-    """
-    command = {"action": "turn_head_right", "angle_increment": angle_increment}
     broadcaster.send_message(command)
 
 @openai_function

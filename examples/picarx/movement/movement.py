@@ -52,24 +52,22 @@ class PiCarXMovements:
         # Set a timer to stop the movement after the specified time
         self._set_timer(time)
 
-    def tilt_head_up(self, angle_increment):
-        self.tilt_angle += angle_increment
-        self.tilt_angle = min(self.tilt_angle, 35)
+    def move_head(self, tilt_increment, pan_increment):
+        """
+        Adjusts the robot's head tilt and pan angles.
+
+        Args:
+            tilt_increment (int): The angle increment to tilt the head up/down. Positive for up, negative for down.
+            pan_increment (int): The angle increment to turn the head left/right. Positive for right, negative for left.
+        """
+        # Adjust tilt angle and ensure it stays within the bounds
+        self.tilt_angle += tilt_increment
+        self.tilt_angle = max(min(self.tilt_angle, 35), -35)
         self.px.set_cam_tilt_angle(self.tilt_angle)
 
-    def tilt_head_down(self, angle_increment):
-        self.tilt_angle -= angle_increment
-        self.tilt_angle = max(self.tilt_angle, -35)
-        self.px.set_cam_tilt_angle(self.tilt_angle)
-
-    def turn_head_left(self, angle_increment):
-        self.pan_angle -= angle_increment
-        self.pan_angle = max(self.pan_angle, -35)
-        self.px.set_cam_pan_angle(self.pan_angle)
-
-    def turn_head_right(self, angle_increment):
-        self.pan_angle += angle_increment
-        self.pan_angle = min(self.pan_angle, 35)
+        # Adjust pan angle and ensure it stays within the bounds
+        self.pan_angle += pan_increment
+        self.pan_angle = max(min(self.pan_angle, 35), -35)
         self.px.set_cam_pan_angle(self.pan_angle)
 
     def stop(self):
