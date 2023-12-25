@@ -137,7 +137,7 @@ class PiCarXMovements:
 
     def adjust_position_to_keep_human_in_frame(self, x):
         self.is_adjusting = True
-        frame_center = 300  # Assuming a standard frame width of 640px
+        frame_center = 320  # Assuming a standard frame width of 640px
         deviation = x - frame_center
 
         # Continuously adjust position until deviation is within acceptable limits
@@ -154,7 +154,7 @@ class PiCarXMovements:
                 coordinate_x = Vilib.detect_obj_parameter['human_x']
                 deviation = coordinate_x - frame_center
             else:
-                pass  # Stop adjusting if human is no longer detected
+                break  # Stop adjusting if human is no longer detected
 
             time.sleep(0.01)  # Adjust time as needed for responsiveness
         self.is_adjusting = False
