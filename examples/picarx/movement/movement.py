@@ -38,7 +38,8 @@ class PiCarXMovements:
     def move(self, direction, speed, angle, time_to_move=0, callback=None):
         """
         Moves the car in a specified direction with a given speed and angle.
-        If a callback is provided, it will be called periodically to adjust the speed based on obstacle distance.
+        If a callback is provided, it will be called periodically to make adjustments as appropriate.
+        If time_to_move is greater than 0, the car will only move for that amount of time.
         """
         self.is_moving = True
         self.drive_angle = self.clamp_number(self.drive_angle + angle, -40, 40)
@@ -47,7 +48,25 @@ class PiCarXMovements:
         if callback is None:
             callback = self.adjust_speed_based_on_obstacle
 
-        self._start_callback_thread(callback, direction, speed)
+        self._start_movement_thread(callback, direction, speed, time_to_move)
+
+    def _start_movement_thread(self, callback, direction, speed, time_to_move):
+        """
+        Starts a thread to handle the movement and call the callback function.
+        """
+        def movement_thread():
+            start_time = time.time()
+            while self.is_moving:
+                current_time = time.time()
+                if time_to_move > 0 and (current_time - start_time) >= time_to_move:
+                    self.stop()
+                    break
+
+                callback(direction, speed)
+                time.sleep(0.1)
+
+        thread = threading.Thread(target=movement_thread)
+        thread.start()
 
     def adjust_speed_based_on_obstacle(self, direction, original_speed):
         """
