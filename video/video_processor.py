@@ -47,7 +47,7 @@ class VideoProcessor:
                 continue
 
             # Process the frame
-            self.process_frame(frame)
+            #self.process_frame(frame)
 
             # Capture frames at a set interval for saving
             if time.time() - self.last_capture_time > self.capture_interval:

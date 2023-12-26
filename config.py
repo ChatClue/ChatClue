@@ -56,9 +56,21 @@ AUDIO_SETTINGS = {
 VIDEO_SETTINGS = {
     # This uses the cv2.VideoCapture method which takes the device as an argument. Typically, 0 is the primary camera. 
     # This can also accept a file path to the video stream, or a stream URL. 
-    "VIDEO_DEVICE": "http://192.168.86.41:9000/mjpg",
+    "VIDEO_DEVICE": 0, #"http://192.168.86.41:9000/mjpg",
     # If you would like to see the video as it is streamed, set this to True. Otherwise, to run video processing in the background, set this to False.
     "SHOW_VIDEO": True
+}
+
+# Osiris uses the Vertex AI API and the gemini-pro-vision corresponding model to provide image/video descriptions where appropriate.
+# This implementation can be found in the integrations.google.vision directory.
+# Once OpenAI's vision models are generally released, this will be converted to an adapter implementation. TODO
+GOOGLE_VISION_SETTINGS = {
+    # Optional. Path to the JSON file containing your Google Cloud API key.
+    # Uncomment and provide the path if you are not using the GOOGLE_APPLICATION_CREDENTIALS environment variable.
+    #'api_key_path': 'path/to/api_key.json',
+    "model": "gemini-pro-vision",
+    "project_id": "chatclue",
+    "location": "us-west4"
 }
 
 OPENAI_SETTINGS = {
@@ -68,11 +80,14 @@ OPENAI_SETTINGS = {
     # The specific model of GPT to use for generating responses (e.g., 'gpt-3.5-turbo-1106').
     "model": "gpt-4-1106-preview", #"gpt-3.5-turbo-1106", #"gpt-4-1106-preview",
 
+    # Currently disabled. Will reenable as optional adapter once -vision models are released. Currently using GOOGLE_VISION_SETTINGS above to process image descriptions when needed.
+    #"image_model": "gpt-4-1106-vision-preview", 
+
     # Model used for embedding text into a numerical format, useful in certain applications like semantic search.
     "embedding_model": "text-embedding-ada-002",
 
-    # Maximum number of tokens (words) that can be used in the context for the GPT model.
-    "max_context_tokens": 2500,
+    # Maximum number of tokens (wordsish) that can be used in the context for the GPT model.
+    "max_context_tokens": 500,
 
     # Temperature: Controls the randomness of the GPT model's output. 0 is deterministic, 1 is maximum randomness.
     "temperature": 0.5,
@@ -112,7 +127,7 @@ CELERY_CONFIG = {
     # Set to False for manual start or in production environments. True is preferable for development.
     # Manual starts can be achieved by running the following command in the terminal:
     # - celery -A osiris.celery_app worker --loglevel=info
-    "RUN_LOCALLY_AUTOMATICALLY": True,
+    "RUN_LOCALLY_AUTOMATICALLY": False,
 
     # Logging level for Celery. Use "debug" for more verbose output, helpful in development.
     "LOCAL_LOG_LEVEL": "critical",

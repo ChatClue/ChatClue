@@ -1,4 +1,4 @@
-from config import AUDIO_SETTINGS, CELERY_CONFIG, LOG_LEVEL, VIDEO_SETTINGS
+from config import CELERY_CONFIG, LOG_LEVEL, VIDEO_SETTINGS
 from utils.os.helpers import OSHelper
 from celery import Celery
 from celery_config import get_celery_app
@@ -9,6 +9,7 @@ from video.video_processor import VideoProcessor
 from audio.audio_out import get_audio_out
 from utils.os.helpers import OSHelper
 from utils.text.welcome import welcome_message
+from background.memory.tasks import *
 from tools import * # Import all openai tool functions
 import logging
 import subprocess
@@ -112,10 +113,8 @@ def main():
                 except queue.Empty:
                     pass 
         except KeyboardInterrupt:
-            print("SHUTTING DOWN")
             audio_processor.shutdown()
             video_processor.shutdown()
-            print("SHUT DOWN")
             logging.info("Program interrupted by user. Exiting...")
         
         audio_thread.join()

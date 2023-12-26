@@ -6,8 +6,7 @@ from movement.movement import PiCarXMovements
 
 async def listen(car):
     uri = "ws://192.168.86.38:8765/websocket"
-    car.start_follow_the_human()  # Start following human
-    car.focus_on_human()  # Start focusing on human
+    car.start_following_human()  # Start focusing on human
 
     while True:
         try:
@@ -16,7 +15,7 @@ async def listen(car):
                 while True:
                     message = await websocket.recv()
                     print(f"Message received: {message}")
-                    stop_following_human()  # Stop following human to process command
+                    start_following_human()  # Stop following human to process command
                     process_command(car, message)
                     start_following_human()  # Resume following human
         except websockets.ConnectionClosed:
@@ -27,11 +26,11 @@ async def listen(car):
             await asyncio.sleep(5)  # Wait 5 seconds before trying to reconnect
 
 def start_following_human(car):
-    car.start_follow_the_human()
+    # car.start_follow_the_human()
     car.focus_on_human()
 
 def stop_following_human(car):
-    car.stop_follow_the_human()
+    # car.stop_follow_the_human()
     car.stop_focus_on_human()
 
 def process_command(car, message):
