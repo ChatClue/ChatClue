@@ -26,6 +26,18 @@ async def listen(car):
             print(f"Connection failed: {e}. Retrying in 5 seconds...")
             await asyncio.sleep(5)  # Wait 5 seconds before trying to reconnect
 
+async def run_display():
+    with ThreadPoolExecutor() as executor:
+        loop = asyncio.get_running_loop()
+        await loop.run_in_executor(executor, lambda: Vilib.display(local=True, web=True))
+
+async def main(car):
+    # Schedule both the display and listen tasks to run concurrently
+    await asyncio.gather(
+        run_display(),
+        listen(car)
+    )
+
 def start_following_human(car):
     # car.start_follow_the_human()
     car.start_focus_on_human()
@@ -56,14 +68,6 @@ def process_command(car, message):
             print("Not a JSON command")
     except json.JSONDecodeError:
         print("Not a JSON command")
-
-async def main(car):
-    # Run Vilib.display in a separate thread
-    with ThreadPoolExecutor() as executor:
-        loop = asyncio.get_running_loop()
-        await loop.run_in_executor(executor, lambda: Vilib.display(local=True, web=True))
-        # Continue with WebSocket listening
-        await listen(car)
 
 if __name__ == "__main__":
     car = PiCarXMovements()  # Initialize car object
