@@ -7,7 +7,7 @@ from movement.movement import PiCarXMovements
 
 async def listen(car):
     uri = "ws://192.168.86.38:8765/websocket"
-    start_following_human(car)  # Start focusing on human
+    #start_following_human(car)  # Start focusing on human
 
     while True:
         try:
@@ -16,9 +16,9 @@ async def listen(car):
                 while True:
                     message = await websocket.recv()
                     print(f"Message received: {message}")
-                    stop_following_human()  # Stop following human to process command
+                    #stop_following_human()  # Stop following human to process command
                     process_command(car, message)
-                    start_following_human()  # Resume following human
+                    #start_following_human()  # Resume following human
         except websockets.ConnectionClosed:
             print("WebSocket connection closed. Reconnecting...")
             await asyncio.sleep(5)  # Wait 5 seconds before trying to reconnect
@@ -67,10 +67,11 @@ async def main(car):
 
 if __name__ == "__main__":
     car = PiCarXMovements()  # Initialize car object
-    try:
-        Vilib.camera_start(vflip=False, hflip=False)
-        asyncio.run(main(car))
-    finally:
-        Vilib.camera_close()
-        stop_following_human(car)
-        car.reset()
+    listen(car)
+    # try:
+    #     Vilib.camera_start(vflip=False, hflip=False)
+    #     asyncio.run(main(car))
+    # finally:
+    #     Vilib.camera_close()
+    #     stop_following_human(car)
+    #     car.reset()
