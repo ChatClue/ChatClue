@@ -61,9 +61,9 @@ async def main(car):
     # Run Vilib.display in a separate thread
     with ThreadPoolExecutor() as executor:
         loop = asyncio.get_running_loop()
+        await listen(car)
         await loop.run_in_executor(executor, lambda: Vilib.display(local=True, web=True))
         # Continue with WebSocket listening
-        await listen(car)
 
 if __name__ == "__main__":
     car = PiCarXMovements()  # Initialize car object
