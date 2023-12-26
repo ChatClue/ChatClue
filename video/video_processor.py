@@ -39,25 +39,26 @@ class VideoProcessor:
         """
         Captures and processes the video stream.
         """
-        self.cap = cv2.VideoCapture(self.device)
+        if VIDEO_SETTINGS.get('CAPTURE_VIDEO', False):
+            self.cap = cv2.VideoCapture(self.device)
 
-        while not self.shutdown_event.is_set():
-            ret, frame = self.cap.read()
-            if not ret:
-                continue
+            while not self.shutdown_event.is_set():
+                ret, frame = self.cap.read()
+                if not ret:
+                    continue
 
-            # Process the frame
-            #self.process_frame(frame)
+                # Process the frame
+                #self.process_frame(frame)
 
-            # Capture frames at a set interval for saving
-            if time.time() - self.last_capture_time > self.capture_interval:
-                frame_name = os.path.join(self.tmp_folder, f"frame_{self.frame_counter}.jpg")
-                cv2.imwrite(frame_name, frame)
-                logging.debug(f"Frame saved as {frame_name}")
-                self.frame_counter += 1
-                self.last_capture_time = time.time()
+                # Capture frames at a set interval for saving
+                if time.time() - self.last_capture_time > self.capture_interval:
+                    frame_name = os.path.join(self.tmp_folder, f"frame_{self.frame_counter}.jpg")
+                    cv2.imwrite(frame_name, frame)
+                    logging.debug(f"Frame saved as {frame_name}")
+                    self.frame_counter += 1
+                    self.last_capture_time = time.time()
 
-        self.clean_up()
+            self.clean_up()
     
     def clean_up(self):
         """

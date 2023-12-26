@@ -5,6 +5,7 @@ import tiktoken
 import time
 from config import OPENAI_SETTINGS
 from openai import OpenAI, OpenAIError
+from integrations.openai.openai_conversation_builder import OpenAIConversationBuilder
 
 class OpenAIClient:
     """
@@ -57,6 +58,11 @@ class OpenAIClient:
             The response object from the OpenAI API or None if an error occurs.
         """
         try:
+            model = self.model
+            if OpenAIConversationBuilder.messages_array_contains_image(recent_messages):
+                # Use the image model if any message contains an image URL
+                model = self.image_model
+
             tool_choice = None
             if tools is not None and not is_tool_call:
                 # Modify the last message to prompt for a tool choice if tools are available
@@ -65,7 +71,7 @@ class OpenAIClient:
 
             # Create a completion request to the OpenAI API
             response = self.client.chat.completions.create(
-                model=self.model,
+                model=model,
                 messages=recent_messages,
                 tools=tools,
                 temperature=self.temperature,

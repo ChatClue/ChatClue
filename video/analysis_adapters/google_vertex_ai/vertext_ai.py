@@ -2,7 +2,7 @@ import os
 import vertexai
 from vertexai.preview.generative_models import GenerativeModel, Part
 from utils.os.helpers import OSHelper
-from config import GOOGLE_VISION_SETTINGS
+from config import GOOGLE_VISION_ANALYSIS_ADAPTER_SETTINGS
 
 class VertexAIClient:
     def __init__(self):
@@ -10,14 +10,14 @@ class VertexAIClient:
         Initializes VertexAIImageAnalyzer with Google Cloud credentials.
         Sets up the Vertex AI environment and loads the Gemini Pro Vision model.
         """
-        if 'api_key_path' in GOOGLE_VISION_SETTINGS:
-            os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = GOOGLE_VISION_SETTINGS['api_key_path']
+        if 'api_key_path' in GOOGLE_VISION_ANALYSIS_ADAPTER_SETTINGS:
+            os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = GOOGLE_VISION_ANALYSIS_ADAPTER_SETTINGS['api_key_path']
         
         # Initialize Vertex AI with the project ID and location from the config
-        vertexai.init(project=GOOGLE_VISION_SETTINGS['project_id'], location=GOOGLE_VISION_SETTINGS['location'])
+        vertexai.init(project=GOOGLE_VISION_ANALYSIS_ADAPTER_SETTINGS['project_id'], location=GOOGLE_VISION_ANALYSIS_ADAPTER_SETTINGS['location'])
         
         # Load the Gemini Pro Vision model
-        self.model = GenerativeModel(GOOGLE_VISION_SETTINGS['model'])
+        self.model = GenerativeModel(GOOGLE_VISION_ANALYSIS_ADAPTER_SETTINGS['model'])
 
     def analyze_image(self, image_path: str, query: str) -> str:
         """
