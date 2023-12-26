@@ -55,9 +55,11 @@ class PiCarXMovements:
         Starts a thread to handle the movement and call the callback function.
         """
         def movement_thread():
+            print(time_to_move)
             start_time = time.time()
             while self.is_moving:
                 current_time = time.time()
+                print(current_time)
                 if time_to_move > 0 and (current_time - start_time) >= time_to_move:
                     self.stop()
                     break
