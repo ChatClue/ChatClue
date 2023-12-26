@@ -38,28 +38,50 @@ class PiCarXMovements:
     def move(self, direction, speed, angle, time_to_move=0, callback=None):
         """
         Moves the car in a specified direction with a given speed and angle.
-        If a callback is provided
+        If a callback is provided, it will be called periodically to adjust the speed based on obstacle distance.
         """
         self.is_moving = True
         self.drive_angle = self.clamp_number(self.drive_angle + angle, -40, 40)
         self.px.set_dir_servo_angle(self.drive_angle)
 
+        if callback is None:
+            callback = self.adjust_speed_based_on_obstacle
+
+        self._start_callback_thread(callback, direction, speed)
+
+    def adjust_speed_based_on_obstacle(self, direction, original_speed):
+        """
+        Adjusts the car's speed based on the distance to the nearest obstacle.
+        """
+        while self.is_moving:
+            obstacle_status = self.detect_obstacle()
+
+            if obstacle_status == 'danger':
+                self.px.stop()
+                break
+            elif obstacle_status == 'caution':
+                reduced_speed = max(original_speed / 2, 10)  # Reduce speed but not lower than 10
+                self._move_with_speed(direction, reduced_speed)
+            else:
+                self._move_with_speed(direction, original_speed)
+
+            time.sleep(0.1)  # Check every 100ms
+
+    def _move_with_speed(self, direction, speed):
+        """
+        Internal function to move the car with the given speed.
+        """
         if direction == "forward":
             self.px.forward(speed)
         elif direction == "backward":
             self.px.backward(speed)
 
-        if callback:
-            self._start_callback_thread(callback)
-    
-    def _start_callback_thread(self, callback):
+    def _start_callback_thread(self, callback, direction, speed):
         """
         Starts a thread to continuously execute the callback function at the given interval.
         """
         def callback_thread():
-            while self.is_moving:
-                callback()
-                time.sleep(0.01)
+            callback(direction, speed)
 
         thread = threading.Thread(target=callback_thread)
         thread.start()
@@ -203,6 +225,7 @@ class PiCarXMovements:
         self.is_moving = False
     
     def reset(self):
+        self.stop()
         self.px.set_dir_servo_angle(0)
         self.px.set_cam_tilt_angle(0)
         self.px.set_cam_pan_angle(0)
