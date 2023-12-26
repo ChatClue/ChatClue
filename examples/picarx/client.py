@@ -1,4 +1,5 @@
 import asyncio
+from concurrent.futures import ThreadPoolExecutor
 import websockets
 import json
 from vilib import Vilib
@@ -56,12 +57,19 @@ def process_command(car, message):
     except json.JSONDecodeError:
         print("Not a JSON command")
 
+async def main(car):
+    # Run Vilib.display in a separate thread
+    with ThreadPoolExecutor() as executor:
+        loop = asyncio.get_running_loop()
+        await loop.run_in_executor(executor, lambda: Vilib.display(local=True, web=True))
+        # Continue with WebSocket listening
+        await listen(car)
+
 if __name__ == "__main__":
     car = PiCarXMovements()  # Initialize car object
     try:
-        asyncio.get_event_loop().run_until_complete(listen(car))
-        Vilib.camera_start(vflip=False,hflip=False)
-        Vilib.display(local=True,web=True)
+        Vilib.camera_start(vflip=False, hflip=False)
+        asyncio.run(main(car))
     finally:
         Vilib.camera_close()
         stop_following_human(car)
