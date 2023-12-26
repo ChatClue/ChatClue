@@ -1,5 +1,5 @@
 import threading
-import websockets
+import websocket
 import json
 import time
 from vilib import Vilib
@@ -7,25 +7,24 @@ from movement.movement import PiCarXMovements
 
 def listen(car):
     uri = "ws://192.168.86.38:8765/websocket"
-    start_following_human(car)  # Start focusing on human
+    start_following_human(car)
 
     while True:
         try:
-            # Note: Using synchronous WebSocket client
-            with websockets.connect(uri) as websocket:
-                print(f"Connected to WebSocket server at {uri}")
-                while True:
-                    message = websocket.recv()
-                    print(f"Message received: {message}")
-                    stop_following_human(car)  # Stop following human to process command
-                    process_command(car, message)
-                    start_following_human(car)  # Resume following human
-        except websockets.ConnectionClosed:
+            ws = websocket.create_connection(uri)
+            print(f"Connected to WebSocket server at {uri}")
+            while True:
+                message = ws.recv()
+                print(f"Message received: {message}")
+                stop_following_human(car)
+                process_command(car, message)
+                start_following_human(car)
+        except websocket.WebSocketConnectionClosedException:
             print("WebSocket connection closed. Reconnecting...")
-            time.sleep(5)  # Wait 5 seconds before trying to reconnect
+            time.sleep(5)
         except Exception as e:
             print(f"Connection failed: {e}. Retrying in 5 seconds...")
-            time.sleep(5)  # Wait 5 seconds before trying to reconnect
+            time.sleep(5)
 
 def start_following_human(car):
     car.start_focus_on_human()
