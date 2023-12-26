@@ -37,7 +37,7 @@ def process_command(car, message):
         command = json.loads(message)
         if isinstance(command, dict):
             action = command.get("action")
-            time_val = command.get("time", 1) / 1000  # Convert milliseconds to seconds
+            time_val = command.get("time", 1000) / 1000  # Convert milliseconds to seconds
             speed = command.get("speed", 0)
             angle = command.get("angle", 0)
             tilt_increment = command.get("tilt_increment", 0)
@@ -45,6 +45,7 @@ def process_command(car, message):
 
             if action in ["move_forward", "move_backward"]:
                 direction = "forward" if action == "move_forward" else "backward"
+                print(f"Moving {direction} at speed {speed} for {time_val} seconds")
                 car.move(direction, speed, angle, time_val)
             elif action == "move_head":
                 car.move_head(tilt_increment, pan_increment)
