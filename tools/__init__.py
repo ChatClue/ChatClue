@@ -1,1 +1,2 @@
-from .robot import *
+from .picarx import *
+from .video import *

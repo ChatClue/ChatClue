@@ -44,3 +44,27 @@ class Conversation(Base):
     response_embedding = Column(Vector(1536), nullable=False,
                                  doc="The vector embedding of the user's prompt, "
                                      "representing linguistic features.")
+
+class SystemState(Base):
+    """
+    Represents the 'system_state' table in the database.
+
+    This class defines the schema for storing system state data, including
+    the current state of the system and the corresponding embeddings.
+    """
+
+    # Name of the table in the database
+    __tablename__ = 'system_state'
+
+    # Columns of the table
+    id = Column(Integer, primary_key=True, 
+                doc="The unique identifier for each system state.")
+    
+    created_at = Column(DateTime(timezone=True), server_default=func.now(),
+                        doc="Timestamp when the system state was created.")
+    
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now(),
+                        doc="Timestamp when the system state was last updated.")
+    
+    last_wake_time = Column(Integer, nullable=True, 
+                        doc="The last time a request was received from the user.")

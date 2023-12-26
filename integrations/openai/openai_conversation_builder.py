@@ -14,7 +14,7 @@ class OpenAIConversationBuilder:
         """
         self.conversation_memory_manager = ConversationMemoryManager()
 
-    def create_recent_conversation_messages_array(self, latest_conversation_part, overwrite_context_buffer=False, context_buffer=None):
+    def create_recent_conversation_messages_array(self, latest_conversation_part, overwrite_context_buffer=False, context_buffer=None, image_url=None):
         """
         Creates an array of recent conversations formatted for the OpenAI API.
 
@@ -35,7 +35,17 @@ class OpenAIConversationBuilder:
                 "role": speaker_role,
                 "content": json.dumps(conversation.response)
             })
-        messages.append({'role': 'user', 'content': json.dumps(latest_conversation_part)})
+        
+        if image_url is None:
+            messages.append({'role': 'user', 'content': json.dumps(latest_conversation_part)})
+        else:
+            messages.append({
+                'role': 'user', 
+                'content': [
+                    {'type': 'image_url', 'image_url': image_url},
+                    {'type': 'text', 'text': json.dumps(latest_conversation_part)}
+                ]
+            })
         logging.info(f"ROBOT THOUGHT: Recent conversations formatted for OpenAI: {messages}")
         return messages
 

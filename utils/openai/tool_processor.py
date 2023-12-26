@@ -55,6 +55,7 @@ class ToolProcessor:
 
         # Attempt to execute the tool function
         try:
+            logging.info(f"Running tool function {tool_name} with arguments: {arguments}")
             response["function_result"] = tool_function(**arguments)
             response["success"] = True
         except TypeError as e:
@@ -63,7 +64,6 @@ class ToolProcessor:
         # Update response with tool call details
         response["tool_call_id"] = tool_response.id
         response["tool_name"] = tool_name
-
         return response
 
     def get_function_by_name(self, tool_name):

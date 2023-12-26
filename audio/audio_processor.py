@@ -3,16 +3,16 @@ import logging
 import json
 import threading
 import time
+import datetime
 import sounddevice as sd
 from vosk import KaldiRecognizer, Model
 from .audio_out import get_audio_out
+from celery_config import get_celery_app
 from integrations.openai.openai import OpenAIClient
 from integrations.openai.openai_conversation_builder import OpenAIConversationBuilder
 from utils.audio.helpers import contains_quiet_please_phrase, contains_wake_phrase, get_tool_not_found_phrase
-from background.memory.tasks import store_conversation_task
 from decorators.openai_decorators import openai_functions
 from utils.openai.tool_processor import ToolProcessor
-from database.conversations import ConversationMemoryManager
 from broadcast.broadcaster import broadcaster
 from config import CONVERSATIONS_CONFIG, AUDIO_SETTINGS
 
@@ -37,7 +37,6 @@ class AudioProcessor:
         self.dump_filename = AUDIO_SETTINGS.get('AUDIO_IN_DUMP_FILENAME')
         self.audio_queue = queue.Queue()
         self.openai_client = OpenAIClient()
-        self.conversation_memory_manager = ConversationMemoryManager()
         self.openai_conversation_builder = OpenAIConversationBuilder()
         self.tool_processor = ToolProcessor()
         self.broadcaster = broadcaster
@@ -47,6 +46,7 @@ class AudioProcessor:
         self.last_wake_time = 0
         self.last_response_end_time = 0
         self.processing_openai_request = False
+        self.shutdown_event = threading.Event()
 
     def open_dump_file(self):
         """Opens the file to dump audio input if a filename is provided."""
@@ -75,6 +75,7 @@ class AudioProcessor:
     def update_wake_time(self):
         """Updates the time when a wake phrase was last heard."""
         self.last_wake_time = time.time()
+        self.save_system_state()
 
     def update_response_end_time(self):
         """Updates the time when the robot's last response ended."""
@@ -107,7 +108,7 @@ class AudioProcessor:
                 rec = KaldiRecognizer(self.model, self.samplerate)
                 openai_stream_thread = None
 
-                while True:
+                while not self.shutdown_event.is_set():
                     data, current_time = self.get_audio_data()
                     result = self.process_recognition(data, rec)
 
@@ -349,4 +350,15 @@ class AudioProcessor:
             speakerType (str): "user" or "assistant", indicating who is speaking.
             response (str): The text of the response.
         """
-        store_conversation_task.delay(speaker_type=speaker_type, response=response)
+        get_celery_app().send_task('background.memory.tasks.store_conversation_task', args=[speaker_type, response])
+        logging.info("Store conversation task submitted to background")
+    
+    def save_system_state(self):
+        """
+        Saves the system state in the database asynchronously using a Celery task.
+        """
+        get_celery_app().send_task('background.memory.tasks.update_system_state_task', args=[self.last_wake_time])
+        logging.info("Update system state task submitted to background")
+
+    def shutdown(self):
+        self.shutdown_event.set()

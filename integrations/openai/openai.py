@@ -33,16 +33,25 @@ class OpenAIClient:
         self.response_queue = queue.Queue()
         self.stop_signal = threading.Event()
         self.model = OPENAI_SETTINGS.get('model', "gpt-3.5-turbo-1106")
+        self.image_model = OPENAI_SETTINGS.get('image_model', "gpt-4-1106-vision-preview")
         self.embedding_model = OPENAI_SETTINGS.get('embedding_model', "text-embedding-ada-002")
         self.temperature = OPENAI_SETTINGS.get('temperature', 0.5)
         self.streaming_complete = False
 
     def create_completion(self, recent_messages, streaming=True, response_format=None, tools=None, is_tool_call=False):
         """
-        Creates a completion request to the OpenAI API based on recognized text.
+        Creates a completion request to the OpenAI API based on recent messages.
+
+        This method selects a model based on the presence of an image URL in the conversation 
+        and sends a completion request to the OpenAI API using the chosen model. It can also
+        handle tool choices for the conversation if provided.
 
         Args:
-            recognized_text (str): The text recognized from the audio input.
+            recent_messages (list): A list of message dictionaries from the recent conversation.
+            streaming (bool): Indicates if streaming is enabled for the response.
+            response_format (str, optional): The format in which the response is expected.
+            tools (list, optional): A list of tools that can be used in the conversation.
+            is_tool_call (bool): Flag to indicate if this is a direct tool call.
 
         Returns:
             The response object from the OpenAI API or None if an error occurs.
@@ -50,8 +59,11 @@ class OpenAIClient:
         try:
             tool_choice = None
             if tools is not None and not is_tool_call:
+                # Modify the last message to prompt for a tool choice if tools are available
                 recent_messages[-1]["content"] = "Please pick a tool from the tools array and return a tools response to complete this request: " + recent_messages[-1]["content"]
                 tool_choice = "auto"
+
+            # Create a completion request to the OpenAI API
             response = self.client.chat.completions.create(
                 model=self.model,
                 messages=recent_messages,
@@ -63,11 +75,14 @@ class OpenAIClient:
             )
             return response
         except OpenAIError as e:
+            # Handle API-specific errors
             logging.error(f"OpenAI API error: {e}")
             return None
         except Exception as e:
+            # Handle general errors
             logging.error(f"Error while creating completion: {e}")
             return None
+
 
     def stream_response(self, conversation):
         """
@@ -153,6 +168,23 @@ class OpenAIClient:
                 self.response_queue.task_done()
             except queue.Empty:
                 break
+    
+    def conversation_contains_image_url(self, conversation):
+        """
+        Checks if any of the messages in the provided array contain an 'image_url' content type.
+
+        Args:
+            messages (list): A list of message dictionaries. Each message is expected to have 
+                            'role' and 'content' keys. The 'content' can be a string or a dictionary.
+
+        Returns:
+            bool: True if any message contains an 'image_url' content type, False otherwise.
+        """
+        for message in conversation:
+            # Check if the content is a dictionary and has 'type' key with value 'image_url'
+            if isinstance(message.get('content'), dict) and message['content'].get('type') == 'image_url':
+                return True
+        return False
     
     def full_stop(self):
         self.clear_queue()      # Clear the queue immediately
