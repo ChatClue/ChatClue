@@ -1,49 +1,43 @@
-import asyncio
-from concurrent.futures import ThreadPoolExecutor
+import threading
 import websockets
 import json
+import time
 from vilib import Vilib
 from movement.movement import PiCarXMovements
 
-async def listen(car):
+def listen(car):
     uri = "ws://192.168.86.38:8765/websocket"
     start_following_human(car)  # Start focusing on human
 
     while True:
         try:
-            async with websockets.connect(uri) as websocket:
+            # Note: Using synchronous WebSocket client
+            with websockets.connect(uri) as websocket:
                 print(f"Connected to WebSocket server at {uri}")
                 while True:
-                    message = await websocket.recv()
+                    message = websocket.recv()
                     print(f"Message received: {message}")
-                    stop_following_human()  # Stop following human to process command
+                    stop_following_human(car)  # Stop following human to process command
                     process_command(car, message)
-                    start_following_human()  # Resume following human
+                    start_following_human(car)  # Resume following human
         except websockets.ConnectionClosed:
             print("WebSocket connection closed. Reconnecting...")
-            await asyncio.sleep(5)  # Wait 5 seconds before trying to reconnect
+            time.sleep(5)  # Wait 5 seconds before trying to reconnect
         except Exception as e:
             print(f"Connection failed: {e}. Retrying in 5 seconds...")
-            await asyncio.sleep(5)  # Wait 5 seconds before trying to reconnect
+            time.sleep(5)  # Wait 5 seconds before trying to reconnect
 
-async def run_display():
-    with ThreadPoolExecutor() as executor:
-        loop = asyncio.get_running_loop()
-        await loop.run_in_executor(executor, lambda: Vilib.display(local=True, web=True))
-
-async def main(car):
-    # Schedule both the display and listen tasks to run concurrently
-    await asyncio.gather(
-        run_display(),
-        listen(car)
-    )
+def display_video():
+    try:
+        Vilib.camera_start(vflip=False, hflip=False)
+        Vilib.display(local=True, web=True)
+    finally:
+        Vilib.camera_close()
 
 def start_following_human(car):
-    # car.start_follow_the_human()
     car.start_focus_on_human()
 
 def stop_following_human(car):
-    # car.stop_follow_the_human()
     car.stop_focus_on_human()
 
 def process_command(car, message):
@@ -72,9 +66,17 @@ def process_command(car, message):
 if __name__ == "__main__":
     car = PiCarXMovements()  # Initialize car object
     try:
-        Vilib.camera_start(vflip=False, hflip=False)
-        asyncio.run(main(car))
+        # Create and start video display thread
+        video_thread = threading.Thread(target=display_video, daemon=True)
+        video_thread.start()
+
+        # Create and start WebSocket listening thread
+        listen_thread = threading.Thread(target=listen, args=(car,), daemon=True)
+        listen_thread.start()
+
+        # Keep the main thread alive while the other threads are running
+        video_thread.join()
+        listen_thread.join()
     finally:
-        Vilib.camera_close()
         stop_following_human(car)
         car.reset()
