@@ -108,7 +108,7 @@ class PiCarXMovements:
                 self.px.set_cam_pan_angle(self.pan_angle)
                 self.px.set_cam_tilt_angle(self.tilt_angle)
                 
-            time.sleep(0.01)
+            time.sleep(0.05)
     
     def start_focus_on_human(self):
         """
