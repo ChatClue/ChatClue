@@ -59,9 +59,9 @@ def process_command(car, message):
 if __name__ == "__main__":
     car = PiCarXMovements()  # Initialize car object
     try:
+        asyncio.get_event_loop().run_until_complete(listen(car))
         Vilib.camera_start(vflip=False,hflip=False)
         Vilib.display(local=True,web=True)
-        asyncio.get_event_loop().run_until_complete(listen(car))
     finally:
         Vilib.camera_close()
         stop_following_human(car)
