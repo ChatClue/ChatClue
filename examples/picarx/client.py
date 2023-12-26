@@ -6,7 +6,7 @@ from movement.movement import PiCarXMovements
 
 async def listen(car):
     uri = "ws://192.168.86.38:8765/websocket"
-    car.start_following_human()  # Start focusing on human
+    start_following_human()  # Start focusing on human
 
     while True:
         try:
