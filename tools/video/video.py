@@ -33,13 +33,11 @@ def analyze_image_based_on_users_request(users_request):
 
     if state.last_wake_time is None:
         return "Something went wrong while processing the state request. Please try again."
-    
-    # Convert last_wake_time to datetime
-    last_wake_datetime = datetime.fromtimestamp(state.last_wake_time)
 
     # Find the closest image file
-    closest_image_path = OSHelper.find_closest_image("tmp/video/", last_wake_datetime.timestamp())
-    logging.info(f"Closest image path: {closest_image_path}")
+    closest_image_path = OSHelper.find_closest_image("tmp/video/", state.last_wake_time)
+    logging.critical(f"Target Time: {state.last_wake_time}")
+    logging.critical(f"Closest image path: {closest_image_path}")
     if closest_image_path:
         # Analyze the image
         description = vision_client.analyze_image(closest_image_path, users_request)

@@ -23,7 +23,7 @@ class VideoProcessor:
         # Video capture settings
         self.frame_rate = VIDEO_SETTINGS.get('FRAME_RATE', 30)
         self.device = VIDEO_SETTINGS.get('VIDEO_DEVICE', 0)
-        self.capture_interval = VIDEO_SETTINGS.get('CAPTURE_INTERVAL', 2)
+        self.capture_interval = VIDEO_SETTINGS.get('CAPTURE_INTERVAL', 1)
         self.frame_counter = 0
         self.last_capture_time = time.time()
         self.frame_queue = queue.Queue()
@@ -53,7 +53,7 @@ class VideoProcessor:
             if time.time() - self.last_capture_time > self.capture_interval:
                 frame_name = os.path.join(self.tmp_folder, f"frame_{self.frame_counter}.jpg")
                 cv2.imwrite(frame_name, frame)
-                print(f"Frame saved as {frame_name}")
+                logging.debug(f"Frame saved as {frame_name}")
                 self.frame_counter += 1
                 self.last_capture_time = time.time()
 
