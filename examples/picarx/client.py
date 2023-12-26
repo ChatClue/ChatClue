@@ -27,13 +27,6 @@ def listen(car):
             print(f"Connection failed: {e}. Retrying in 5 seconds...")
             time.sleep(5)  # Wait 5 seconds before trying to reconnect
 
-def display_video():
-    try:
-        Vilib.camera_start(vflip=False, hflip=False)
-        Vilib.display(local=True, web=True)
-    finally:
-        Vilib.camera_close()
-
 def start_following_human(car):
     car.start_focus_on_human()
 
@@ -67,16 +60,16 @@ if __name__ == "__main__":
     car = PiCarXMovements()  # Initialize car object
     try:
         # Create and start video display thread
-        video_thread = threading.Thread(target=display_video, daemon=True)
-        video_thread.start()
+        Vilib.camera_start(vflip=False,hflip=False)
+        Vilib.display(local=True,web=True)
 
         # Create and start WebSocket listening thread
         listen_thread = threading.Thread(target=listen, args=(car,), daemon=True)
         listen_thread.start()
 
         # Keep the main thread alive while the other threads are running
-        video_thread.join()
         listen_thread.join()
     finally:
         stop_following_human(car)
+        Vilib.camera_close()
         car.reset()
