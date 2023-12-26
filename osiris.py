@@ -9,6 +9,7 @@ from video.video_processor import VideoProcessor
 from audio.audio_out import get_audio_out
 from utils.os.helpers import OSHelper
 from utils.text.welcome import welcome_message
+from utils.logging.colors import ColorFormatter
 from background.memory.tasks import *
 from tools import * # Import all openai tool functions
 import logging
@@ -21,7 +22,10 @@ import cv2
 import queue
 
 # Configure basic logging for the application
-logging.basicConfig(level=LOG_LEVEL, format='%(asctime)s - %(levelname)s - %(message)s')
+logging.basicConfig(level=LOG_LEVEL)
+root_logger = logging.getLogger()
+for handler in root_logger.handlers:
+    handler.setFormatter(ColorFormatter('%(asctime)s - %(levelname)s - %(message)s'))
 
 # Ensure the necessary tmp/ directories exist
 OSHelper.configure_tmp_directories()

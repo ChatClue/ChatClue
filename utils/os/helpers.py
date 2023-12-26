@@ -33,14 +33,13 @@ class OSHelper:
             if filename.lower().endswith(".jpg"):  # Check if the file is a JPG image
                 filepath = os.path.join(directory, filename)
                 filetime = os.path.getmtime(filepath)  # Get the modification time of the file
-                
                 # Check if the file's time is later than the target time and if it's the closest so far
                 if filetime > target_time:
+                    logging.info(f"File is close: {filepath} - Time: {filetime}")
                     time_diff = filetime - target_time
                     if closest_time_diff is None or time_diff < closest_time_diff:
                         closest_file = filepath
                         closest_time_diff = time_diff
-
         return closest_file
 
     @staticmethod
