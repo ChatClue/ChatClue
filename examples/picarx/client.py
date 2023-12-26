@@ -15,7 +15,7 @@ async def listen(car):
                 while True:
                     message = await websocket.recv()
                     print(f"Message received: {message}")
-                    start_following_human()  # Stop following human to process command
+                    stop_following_human()  # Stop following human to process command
                     process_command(car, message)
                     start_following_human()  # Resume following human
         except websockets.ConnectionClosed:

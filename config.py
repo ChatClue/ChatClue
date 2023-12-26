@@ -56,7 +56,7 @@ AUDIO_SETTINGS = {
 VIDEO_SETTINGS = {
     # This uses the cv2.VideoCapture method which takes the device as an argument. Typically, 0 is the primary camera. 
     # This can also accept a file path to the video stream, or a stream URL. 
-    "VIDEO_DEVICE": 0, #"http://192.168.86.41:9000/mjpg",
+    "VIDEO_DEVICE": "http://192.168.86.41:9000/mjpg",# 0, #"http://192.168.86.41:9000/mjpg",
     # If you would like to see the video as it is streamed, set this to True. Otherwise, to run video processing in the background, set this to False.
     "SHOW_VIDEO": True
 }
