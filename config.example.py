@@ -3,7 +3,7 @@
 
     Please copy this file to config.py and modify the settings as needed.
     
-    COST CONSIDERATIONS: Please be sure to review the settings below. We have tried to make the default settings as cost-effective as possible, but some settings may require additional configuration or cost money to use.
+    COST CONSIDERATIONS: Please be sure to review the settings below. We have tried to make the default settings relatively cost-effective, but some settings may require additional configuration or cost money to use.
     If we think a setting may have a significant cost impact, we will add a note to the setting and tag the note with COST CONSIDERATION. Please review these notes and adjust the settings as needed.
 """
 
