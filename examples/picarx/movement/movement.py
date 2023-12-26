@@ -65,7 +65,7 @@ class PiCarXMovements:
                     break
 
                 callback(direction, speed)
-                time.sleep(0.1)
+                time.sleep(0.01)
 
         thread = threading.Thread(target=movement_thread)
         thread.start()
