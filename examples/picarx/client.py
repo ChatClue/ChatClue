@@ -7,7 +7,7 @@ from movement.movement import PiCarXMovements
 
 async def listen(car):
     uri = "ws://192.168.86.38:8765/websocket"
-    #start_following_human(car)  # Start focusing on human
+    start_following_human(car)  # Start focusing on human
 
     while True:
         try:
@@ -16,9 +16,9 @@ async def listen(car):
                 while True:
                     message = await websocket.recv()
                     print(f"Message received: {message}")
-                    #stop_following_human()  # Stop following human to process command
+                    stop_following_human()  # Stop following human to process command
                     process_command(car, message)
-                    #start_following_human()  # Resume following human
+                    start_following_human()  # Resume following human
         except websockets.ConnectionClosed:
             print("WebSocket connection closed. Reconnecting...")
             await asyncio.sleep(5)  # Wait 5 seconds before trying to reconnect
@@ -61,17 +61,16 @@ async def main(car):
     # Run Vilib.display in a separate thread
     with ThreadPoolExecutor() as executor:
         loop = asyncio.get_running_loop()
-        await listen(car)
         await loop.run_in_executor(executor, lambda: Vilib.display(local=True, web=True))
         # Continue with WebSocket listening
+        await listen(car)
 
 if __name__ == "__main__":
     car = PiCarXMovements()  # Initialize car object
-    listen(car)
-    # try:
-    #     Vilib.camera_start(vflip=False, hflip=False)
-    #     asyncio.run(main(car))
-    # finally:
-    #     Vilib.camera_close()
-    #     stop_following_human(car)
-    #     car.reset()
+    try:
+        Vilib.camera_start(vflip=False, hflip=False)
+        asyncio.run(main(car))
+    finally:
+        Vilib.camera_close()
+        stop_following_human(car)
+        car.reset()
