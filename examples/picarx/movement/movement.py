@@ -38,55 +38,42 @@ class PiCarXMovements:
     def move(self, direction, speed, angle, time_to_move=0, callback=None):
         """
         Moves the car in a specified direction with a given speed and angle.
-        If a callback is provided, it will be called periodically to make adjustments as appropriate.
+        Automatically adjusts speed based on obstacle detection.
         If time_to_move is greater than 0, the car will only move for that amount of time.
+        If a callback is provided, it will be called periodically.
         """
         self.is_moving = True
         self.drive_angle = self.clamp_number(self.drive_angle + angle, -40, 40)
         self.px.set_dir_servo_angle(self.drive_angle)
 
-        if callback is None:
-            callback = self.adjust_speed_based_on_obstacle
+        start_time = time.time()
 
-        self._start_movement_thread(callback, direction, speed, time_to_move)
-
-    def _start_movement_thread(self, callback, direction, speed, time_to_move):
-        """
-        Starts a thread to handle the movement and call the callback function.
-        """
-        def movement_thread():
-            print(time_to_move)
-            start_time = time.time()
-            while self.is_moving:
-                current_time = time.time()
-                print(current_time)
-                if time_to_move > 0 and (current_time - start_time) >= time_to_move:
-                    self.stop()
-                    break
-
-                callback(direction, speed)
-                time.sleep(0.01)
-
-        thread = threading.Thread(target=movement_thread)
-        thread.start()
-
-    def adjust_speed_based_on_obstacle(self, direction, original_speed):
-        """
-        Adjusts the car's speed based on the distance to the nearest obstacle.
-        """
         while self.is_moving:
-            obstacle_status = self.detect_obstacle()
+            current_time = time.time()
 
+            # Stop moving after the specified time
+            if time_to_move > 0 and (current_time - start_time) >= time_to_move:
+                self.stop()
+                break
+
+            # Adjust speed based on obstacle detection
+            obstacle_status = self.detect_obstacle()
             if obstacle_status == 'danger':
                 self.px.stop()
                 break
             elif obstacle_status == 'caution':
-                reduced_speed = max(original_speed / 2, 10)  # Reduce speed but not lower than 10
-                self._move_with_speed(direction, reduced_speed)
+                adjusted_speed = max(speed / 2, 10)  # Reduce speed but not lower than 10
             else:
-                self._move_with_speed(direction, original_speed)
+                adjusted_speed = speed
 
-            time.sleep(0.1)  # Check every 100ms
+            # Move the car with the adjusted speed
+            self._move_with_speed(direction, adjusted_speed)
+
+            # Run callback if provided
+            if callback:
+                callback()
+
+            time.sleep(0.05)  # Short delay before next iteration
 
     def _move_with_speed(self, direction, speed):
         """
@@ -96,16 +83,6 @@ class PiCarXMovements:
             self.px.forward(speed)
         elif direction == "backward":
             self.px.backward(speed)
-
-    def _start_callback_thread(self, callback, direction, speed):
-        """
-        Starts a thread to continuously execute the callback function at the given interval.
-        """
-        def callback_thread():
-            callback(direction, speed)
-
-        thread = threading.Thread(target=callback_thread)
-        thread.start()
 
     def move_head(self, tilt_angle, pan_angle, step=1):
         """
