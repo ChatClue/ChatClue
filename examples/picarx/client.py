@@ -27,7 +27,7 @@ async def listen(car):
 
 def start_following_human(car):
     # car.start_follow_the_human()
-    car.focus_on_human()
+    car.start_focus_on_human()
 
 def stop_following_human(car):
     # car.stop_follow_the_human()
