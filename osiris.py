@@ -21,13 +21,14 @@ import time
 import cv2
 import queue
 
-from decorators.openai_decorators import openai_functions
-
 # Configure basic logging for the application
 logging.basicConfig(level=LOG_LEVEL)
 root_logger = logging.getLogger()
 for handler in root_logger.handlers:
     handler.setFormatter(ColorFormatter('%(asctime)s - %(levelname)s - %(message)s'))
+
+# Ensure the necessary tmp/ directories exist
+OSHelper.configure_tmp_directories()
 
 # Configure background processor / subconcious systems
 celery_app = get_celery_app()

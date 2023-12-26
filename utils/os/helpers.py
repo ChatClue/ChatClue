@@ -111,3 +111,14 @@ class OSHelper:
         # Clear orphaned audio files
         OSHelper.clear_orphaned_audio_files()
         OSHelper.clear_orphaned_video_files()
+    
+    @staticmethod
+    def configure_tmp_directories():
+        """
+        Ensures that the required directories (tmp/audio and tmp/video) exist.
+        Creates them if they do not exist.
+        """
+        directories = ['tmp/audio', 'tmp/video']
+        for directory in directories:
+            os.makedirs(directory, exist_ok=True)
+            logging.info(f"Checked and ensured directory exists: {directory}")
