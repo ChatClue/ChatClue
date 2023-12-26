@@ -39,6 +39,7 @@ def analyze_image_based_on_users_request(users_request):
 
     # Find the closest image file
     closest_image_path = OSHelper.find_closest_image("tmp/video/", last_wake_datetime.timestamp())
+    logging.info(f"Closest image path: {closest_image_path}")
     if closest_image_path:
         # Analyze the image
         description = vision_client.analyze_image(closest_image_path, users_request)
