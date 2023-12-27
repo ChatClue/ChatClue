@@ -57,6 +57,10 @@ If the function is marked as "is_conversational", then the system will autotical
 ### robot
 
 - **Purpose**: Contains tool definitions specifically designed to control a robotic entity (e.g., PiCar-X).
-- **Relation to PiCar-X Client**: The functions in the `tools/robot` directory are aligned with the `examples/picarx/` client example. The client example listens to a WebSocket connection created by a broadcaster in the main application. When tool functions like `move_forward` or `turn_left` are invoked, they send commands over this WebSocket, which the PiCar-X client then listens to and executes.
+- **Relation to PiCar-X Client**: The functions in the `tools/robot` directory are aligned with the `examples/picarx/` client example. The client example listens to a WebSocket connection created by a broadcaster in the main application. When tool functions like are invoked, they send commands over this WebSocket, which the PiCar-X client then listens to and executes.
 
 This is only an example. But, if you have a picarx, it should work as expected if you run the `examples/picarx/client.py` script on your programmable car's RaspberryPi. 
+
+### video
+
+- **Purpose**: Handles video image analysis. This is part of the main application.
