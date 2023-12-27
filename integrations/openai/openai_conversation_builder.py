@@ -110,6 +110,10 @@ class OpenAIConversationBuilder:
             True
         """
         for message in messages:
+            # Ensure message is a dictionary
+            if not isinstance(message, dict):
+                continue
+
             # Check if 'content' is a list
             if isinstance(message.get('content'), list):
                 # Iterate through elements in the 'content' list

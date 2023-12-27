@@ -13,7 +13,6 @@ class VisionAnalysisClient:
         """
         Initializes the AudioOutput class with a dynamically selected TTS adapter, required threads, and pygame mixer settings.
         """
-        logging.info("Using vision analysis adapter: " + VISION_ANALYSIS_SETTINGS['adapter'])
         adapter_path = VISION_ANALYSIS_SETTINGS['adapter']
         module_name, class_name = adapter_path.rsplit(".", 1)
         module = importlib.import_module(module_name)
