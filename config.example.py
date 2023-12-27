@@ -66,6 +66,9 @@ VIDEO_SETTINGS = {
     # This determines whether video will be captured from a device or stream. If False, no video/image processing will be completed by the system.
     "CAPTURE_VIDEO": True,
 
+    # This determines the frame rate of the video capture. This is the number of frames captured per second.
+    "FRAME_RATE": 30,
+
     # This uses the cv2.VideoCapture method which takes the device as an argument. Typically, 0 is the primary camera. 
     # This can also accept a file path to the video stream, or a stream URL like http://192.168.86.41:9000/mjpg for instance.
     "VIDEO_DEVICE": 0,
@@ -165,7 +168,7 @@ CELERY_CONFIG = {
     # Set to False for manual start or in production environments. True is preferable for development.
     # Manual starts can be achieved by running the following command in the terminal:
     # - celery -A osiris.celery_app worker --loglevel=info
-    "RUN_LOCALLY_AUTOMATICALLY": False,
+    "RUN_LOCALLY_AUTOMATICALLY": True,
 
     # Logging level for Celery. Use "debug" for more verbose output, helpful in development.
     "LOCAL_LOG_LEVEL": "critical",
