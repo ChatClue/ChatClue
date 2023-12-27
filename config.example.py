@@ -1,3 +1,12 @@
+"""
+    NOTE: This file contains the default configuration settings for the Osiris system.
+
+    Please copy this file to config.py and modify the settings as needed.
+    
+    COST CONSIDERATIONS: Please be sure to review the settings below. We have tried to make the default settings relatively cost-effective, but some settings may require additional configuration or cost money to use.
+    If we think a setting may have a significant cost impact, we will add a note to the setting and tag the note with COST CONSIDERATION. Please review these notes and adjust the settings as needed.
+"""
+
 import logging
 
 LOG_LEVEL=logging.INFO #Use logging.INFO or logging.DEBUG for verbose outputs in the terminal
@@ -54,22 +63,54 @@ AUDIO_SETTINGS = {
 }
 
 VIDEO_SETTINGS = {
+    # This determines whether video will be captured from a device or stream. If False, no video/image processing will be completed by the system.
+    "CAPTURE_VIDEO": True,
+
+    # This determines the frame rate of the video capture. This is the number of frames captured per second.
+    "FRAME_RATE": 30,
+
     # This uses the cv2.VideoCapture method which takes the device as an argument. Typically, 0 is the primary camera. 
-    # This can also accept a file path to the video stream, or a stream URL. 
-    "VIDEO_DEVICE": "http://192.168.86.41:9000/mjpg",# 0, #"http://192.168.86.41:9000/mjpg",
-    # If you would like to see the video as it is streamed, set this to True. Otherwise, to run video processing in the background, set this to False.
-    "SHOW_VIDEO": True
+    # This can also accept a file path to the video stream, or a stream URL like http://192.168.86.41:9000/mjpg for instance.
+    "VIDEO_DEVICE": 0,
+
+    # If you would like to see the video in your GUI as it is streamed, set this to True. Otherwise, to run video processing in the background, set this to False.
+    "SHOW_VIDEO": True,
+
+    # This deterines how often a frame is saved to tmp/video, in seconds. These images are used ad-hoc for analysis.
+    "CAPTURE_INTERVAL": 1,
 }
 
-# Osiris uses the Vertex AI API and the gemini-pro-vision corresponding model to provide image/video descriptions where appropriate.
-# This implementation can be found in the integrations.google.vision directory.
-# Once OpenAI's vision models are generally released, this will be converted to an adapter implementation. TODO
-GOOGLE_VISION_SETTINGS = {
-    # Optional. Path to the JSON file containing your Google Cloud API key.
-    # Uncomment and provide the path if you are not using the GOOGLE_APPLICATION_CREDENTIALS environment variable.
-    #'api_key_path': 'path/to/api_key.json',
+# VISION_ANALYSIS_SETTINGS configures the vision analysis service adapter. Only applicable if VIDEO_SETTINGS["CAPTURE_VIDEO"] is true.  Otherwise, no vision analysis will be performed.
+# This setting determines which adapter class is used for image analysis.
+#
+# Currently available adapters
+#
+#  - video.analysis_adapters.google_vertex_ai.vertex_ai.VertexAIClient - Uses Google Vertex AI for image analysis.
+#  - video.analysis_adapters.openai_vision.vision.OpenAIVisionClient - Uses OpenAI's vision capabilities for image analysis. Please use OPENAI_SETTINGS below to configure the OpenAI API, specifically the image_model property.
+#    - Note: vision analysis is still in 'preview' / 'beta' on OpenAI. Vision models may not be available on all accounts.  If you are unable to use this adapter, please use the Google Vertex AI adapter on Google Cloud instead.
+#
+# Additional adapters can be defined in video/analysis_adapters if needed
+VISION_ANALYSIS_SETTINGS = {
+    "adapter": "video.analysis_adapters.google_vertex_ai.vertex_ai.VertexAIClient"
+}
+
+# GOOGLE_VISION_ANALYSIS_ADAPTER_SETTINGS are required when the VISION_ANALYSIS_SETTINGS adapter
+# is set to use Google's Vertex AI (video.analysis_adapters.google_vertex_ai.vertex_ai.VertexAIClient).
+# These settings configure the Google Vertex AI client for image analysis.
+GOOGLE_VISION_ANALYSIS_ADAPTER_SETTINGS = {
+    # 'api_key_path' (optional): File path to the JSON file containing the Google Cloud API key.
+    # If not using the GOOGLE_APPLICATION_CREDENTIALS environment variable, uncomment and specify the path.
+    # 'api_key_path': 'path/to/api_key.json',
+
+    # 'model': The specific model to use within Google Vertex AI for vision analysis.
+    # Example: "gemini-pro-vision" specifies a particular vision model.
     "model": "gemini-pro-vision",
+
+    # 'project_id': Your Google Cloud project ID where the Vertex AI service is enabled.
     "project_id": "chatclue",
+
+    # 'location': The Google Cloud region where your Vertex AI service is located.
+    # Example: "us-west4" for a specific location within the United States.
     "location": "us-west4"
 }
 
@@ -77,17 +118,17 @@ OPENAI_SETTINGS = {
     # OpenAI API key for accessing GPT models. Uncomment and set your key here if not using an environment variable.
     #"api_key": "sk-<your-openai-api-key>",
 
-    # The specific model of GPT to use for generating responses (e.g., 'gpt-3.5-turbo-1106').
-    "model": "gpt-4-1106-preview", #"gpt-3.5-turbo-1106", #"gpt-4-1106-preview",
+    # The specific model of GPT to use for generating responses (e.g., 'gpt-3.5-turbo-1106'). COST CONSIDERATION: Different models may have different costs per token. See token pricing for your desired models.
+    "model": "gpt-4-1106-preview",
 
-    # Currently disabled. Will reenable as optional adapter once -vision models are released. Currently using GOOGLE_VISION_SETTINGS above to process image descriptions when needed.
-    #"image_model": "gpt-4-1106-vision-preview", 
+    # If the VISION_ANALYSIS_SETTINGS adapter is set to use OpenAI's vision capabilities, this setting will determine which openai vision model to use.
+    "image_model": "gpt-4-1106-vision-preview", 
 
     # Model used for embedding text into a numerical format, useful in certain applications like semantic search.
     "embedding_model": "text-embedding-ada-002",
 
-    # Maximum number of tokens (wordsish) that can be used in the context for the GPT model.
-    "max_context_tokens": 500,
+    # Maximum number of tokens (wordsish) that can be used in the context for the GPT model. COST CONSIDERATION: higher context buffers create more realistic conversations, but cost more per request. See token pricing for your desired models.
+    "max_context_tokens": 2000,
 
     # Temperature: Controls the randomness of the GPT model's output. 0 is deterministic, 1 is maximum randomness.
     "temperature": 0.5,
@@ -127,7 +168,7 @@ CELERY_CONFIG = {
     # Set to False for manual start or in production environments. True is preferable for development.
     # Manual starts can be achieved by running the following command in the terminal:
     # - celery -A osiris.celery_app worker --loglevel=info
-    "RUN_LOCALLY_AUTOMATICALLY": False,
+    "RUN_LOCALLY_AUTOMATICALLY": True,
 
     # Logging level for Celery. Use "debug" for more verbose output, helpful in development.
     "LOCAL_LOG_LEVEL": "critical",
@@ -154,11 +195,11 @@ TTS_CONFIG = {
     # Additional Adapters: Please feel free to add your own adapter classes to the audio/tts_adapters 
     #                      directory for your own TTS service / models. 
 
-    "tts_adapter": "audio.tts_adapters.gtts.GTTSAdapter",
-    # "tts_adapter": "audio.tts_adapters.pyttsx3.Pyttsx3Adapter",
+    "tts_adapter": "audio.tts_adapters.pyttsx3.Pyttsx3Adapter"
 }
 
 # Optional audio.tts_adapters.gtts.GTTSAdapter configuration.
+# COST CONSIDERATION: While the PYTTSX3 adapter is free and local, the GTTS adapter uses Google Cloud's TTS service, which costs money. It definitely sounds better though.
 GOOGLE_TTS_CONFIG = {
     # Optional. Path to the JSON file containing your Google Cloud API key.
     # Uncomment and provide the path if you are not using the GOOGLE_APPLICATION_CREDENTIALS environment variable.

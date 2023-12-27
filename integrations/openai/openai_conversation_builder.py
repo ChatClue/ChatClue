@@ -82,3 +82,44 @@ class OpenAIConversationBuilder:
             "content": tool_function_response["function_result"]
         }
         return response
+    
+    @staticmethod
+    def messages_array_contains_image(messages):
+        """
+        Checks if any message in the provided array contains an image URL.
+
+        This method iterates through each message in the `messages` array. For each message,
+        it examines the 'content' field, which is expected to be a list. It then iterates
+        through each item in this 'content' list. If any item is a dictionary with a 'type'
+        key set to 'image_url', the method returns True, indicating that at least one message
+        contains an image URL. If no such item is found in any of the messages, the method
+        returns False.
+
+        Args:
+            self: The instance of the class where this method is defined.
+            messages (list): An array of message dictionaries, where each message is expected to
+                            have a 'content' key that is a list of items.
+
+        Returns:
+            bool: True if any of the messages contains an item in its 'content' list with a
+                'type' key set to 'image_url', otherwise False.
+
+        Example:
+            >>> messages = [{'content': [{'type': 'text', 'text': 'Hello'}, {'type': 'image_url', 'image_url': 'http://example.com/image.jpg'}]}]
+            >>> instance.messages_array_contains_image(messages)
+            True
+        """
+        for message in messages:
+            # Ensure message is a dictionary
+            if not isinstance(message, dict):
+                continue
+
+            # Check if 'content' is a list
+            if isinstance(message.get('content'), list):
+                # Iterate through elements in the 'content' list
+                for item in message['content']:
+                    # Check if the item is a dictionary and has 'type' key with 'image_url' value
+                    if isinstance(item, dict) and item.get('type') == 'image_url':
+                        return True
+        # Return False if no such item is found
+        return False

@@ -1,10 +1,8 @@
-import os
-import base64
 import logging
 from decorators.openai_decorators import openai_function
 from datetime import datetime
 from database.system_state import SystemStateManager 
-from integrations.google.vision.vertext_ai import VertexAIClient
+from video.analysis import get_vision_analyzer
 from utils.os.helpers import OSHelper
 
 
@@ -27,7 +25,7 @@ def analyze_image_based_on_users_request(users_request):
     }
     """
     state_manager = SystemStateManager()
-    vision_client = VertexAIClient()
+    vision_client = get_vision_analyzer()
 
     state = state_manager.get_or_create_state()
 

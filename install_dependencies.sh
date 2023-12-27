@@ -91,6 +91,11 @@ pip install opencv-python
 pip install matplotlib
 pip install ultralytics 
 
+if [ ! -f "config.py" ]; then
+    echo "config.py not found. Creating from config.example.py..."
+    cp config.example.py config.py
+    echo "config.py has been created."
+fi
 
 # Install system-specific dependencies
 if [ "$OS_TYPE" = "Linux" ]; then
@@ -137,7 +142,6 @@ then
         fi
     fi
 fi
-
 
 # Configure OpenAI API Key
 read -p "Would you like to add your OpenAI API key to .bashrc or .zshrc (for macOS)? [Y/n]: " add_openai_key
