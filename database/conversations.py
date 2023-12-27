@@ -1,4 +1,3 @@
-from integrations.openai.openai import OpenAIClient
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.sql import func
 from .models import Conversation, Base
@@ -16,7 +15,7 @@ class ConversationMemoryManager:
         """
         self.engine = get_engine()
 
-    def add_conversation(self, speaker_type, response):
+    def add_conversation(self, speaker_type, response, response_embedding, response_tokens):
         """
         Adds a new conversation to the database, automatically creating embeddings and calculating token counts.
 
@@ -24,13 +23,6 @@ class ConversationMemoryManager:
             user_prompt (str): The user's prompt text.
             assistant_response (str): The assistant's response text.
         """
-        openai_client = OpenAIClient()
-
-        # Generate embeddings
-        response_embedding = openai_client.create_embeddings(response)
-
-        # Calculate token counts
-        response_tokens = openai_client.calculate_token_count(response)
 
         new_conversation = Conversation(
             speaker_type=speaker_type,

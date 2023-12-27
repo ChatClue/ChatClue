@@ -75,15 +75,6 @@ VIDEO_SETTINGS = {
 
     # This deterines how often a frame is saved to tmp/video, in seconds. These images are used ad-hoc for analysis.
     "CAPTURE_INTERVAL": 1,
-
-    # If immediate analysis is set to true, every captured frame will be sent for description image analysis as soon as it is received, at the interval specified above in CAPTURE_INTERVAL.
-    # If false, then the frames will be saved and only analyzed if a specific user request is made to the system/computer/robot.
-    # Immediate analysis will provide faster responses, but will use more API resources.
-    #
-    # IMPORTANT COST CONSIDERATION
-    #     - Unless you are running your own custom VISION_ANALYSIS adapter, this can cost money to analyze all images, through either Google Cloud or OpenAI (as defined below). Be cautious.
-    #
-    "IMMEDIATE_ANALYSIS": True,
 }
 
 # VISION_ANALYSIS_SETTINGS configures the vision analysis service adapter. Only applicable if VIDEO_SETTINGS["CAPTURE_VIDEO"] is true.  Otherwise, no vision analysis will be performed.

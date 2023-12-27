@@ -1,6 +1,7 @@
 from celery import shared_task
 from database.conversations import ConversationMemoryManager
 from database.system_state import SystemStateManager
+from integrations.openai.openai import OpenAIClient
 from datetime import datetime
 
 @shared_task
@@ -16,10 +17,15 @@ def store_conversation_task(speaker_type, response):
         speaker_type (str): The type of speaker (e.g., 'user' or 'assistant'), indicating who is speaking.
         response (str): The text of the response or conversation part to be stored.
     """
+    openai_client = OpenAIClient()
+    # Generate embeddings
+    response_embedding = openai_client.create_embeddings(response)
+    # Calculate token counts
+    response_tokens = openai_client.calculate_token_count(response)
     # Initialize the conversation memory manager
     manager = ConversationMemoryManager()
     # Add the conversation part to the database
-    manager.add_conversation(speaker_type=speaker_type, response=response)
+    manager.add_conversation(speaker_type=speaker_type, response=response, response_embedding=response_embedding, response_tokens=response_tokens)
 
 @shared_task
 def update_system_state_task(last_wake_time):
