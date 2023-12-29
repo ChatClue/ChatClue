@@ -1,5 +1,5 @@
 """
-    NOTE: This file contains the default configuration settings for the Osiris system.
+    NOTE: This file contains the default configuration settings for the ChatClue system.
 
     Please copy this file to config.py and modify the settings as needed.
     
@@ -160,7 +160,18 @@ CONVERSATIONS_CONFIG = {
     "user": 1,
 
     # Identifier for the assistant (robot or AI) in the conversation database.
-    "assistant": 2
+    "assistant": 2,
+
+    # Make predictive calls to OpenAI API to determine if the user's request is likely to require a tool or not. If this is true, responses may be slightly delayed, but the system may be more accurate in determining when a tool is needed.
+    # If it is set to false, computer responses will be faster, but the system may be less accurate in determining when a tool request is needed.  
+    #
+    # COST CONSIDERATION: 
+    #   - If set to true, an additional API call is made for every request. If you have many tools to pass to openai, then this could potentially be more cost effective, as the tools array is only passed when it is needed. 
+    #   - If set to false, no additional API calls are made, and the tools array is passed with every request. 
+    # 
+    # The default is set to False, as we want to prioritize quicker, more natural responses from the model. From testing, openai seems to understand when a tool is needed without additional probing. But this seems to rely pretty heavily on the 
+    # verboseness of your tool's metadata and the explicitness of your tool's naming.
+    "predictive_tool_calls": False
 }
 
 CELERY_CONFIG = {
