@@ -1,12 +1,12 @@
-# Project Osiris
+# ChatClue
 
-Osiris is an interactive platform where users can speak naturally to their computers, robots, and IoT devices in real-time. Devices can speak back using the built-in TTS (text-to-speech) adapters and perform real-world actions based on the user's requests. 
+ChatClue is an interactive platform where users can speak naturally to their computers, robots, and IoT devices in real-time. Devices can speak back using the built-in TTS (text-to-speech) adapters and perform real-world actions based on the user's requests. 
 
 * Natural language processing and computer responses are handled automatically through OpenAI's API.
 * Conversation storage and references are built-in and managed using PostgreSQL with the pgvector extension enabled. 
 * Video feed processing is handled automatically, allowing user's to ask their computer/robot/device questions like, "What do you think of this shirt?", "How many fingers am I holding up", "Describe the current scene", "Do you see any animals or unexpected people?"
-* OpenAI Tool calls are handled automatically by the system, allowing you to create an endless set of capabilities. Tools can be created in the [`tools/`](https://github.com/ChatClue/osiris/tree/main/tools) directory, please refer to the readme in the provided link. 
-* Built-in broadcasting to listening devices/robots is handled through the system's [`Broadcaster`](https://github.com/ChatClue/osiris/blob/main/broadcast/broadcaster.py), which uses Websockets. The Broadcaster uses an adapter architecture, so additional broadcaster types other than Websockets (e.g. MQTT) can be implemented with little trouble.
+* OpenAI Tool calls are handled automatically by the system, allowing you to create an endless set of capabilities. Tools can be created in the [`tools/`](https://github.com/ChatClue/ChatClue/tree/main/tools) directory, please refer to the readme in the provided link. 
+* Built-in broadcasting to listening devices/robots is handled through the system's [`Broadcaster`](https://github.com/ChatClue/ChatClue/blob/main/broadcast/broadcaster.py), which uses Websockets. The Broadcaster uses an adapter architecture, so additional broadcaster types other than Websockets (e.g. MQTT) can be implemented with little trouble.
 
 Out of the box, after running the install_dependencies.sh script, and setting up your credentials for OpenAI as described below, Osiris will immediately start listening for a conversation to start, and will continue a back and forth conversation until the session has been terminated. If you have a camera running, it will automatically determine if you need something in the video analyzed, and perform the analysis for you, based on your natural language requests.
 
