@@ -97,7 +97,7 @@ def main():
     try: 
         # Initialize the audio processor with the configuration settings
         logging.info("ROBOT THOUGHT: I am ready to begin.")
-        audio_out.add_to_queue("Welcome to Project Osiris. I am ready to begin.")
+        audio_out.add_to_queue("Welcome to Chat Clue's Project Osiris. I am ready to begin.")
         # Start Audio processing
         audio_processor = AudioProcessor()
         audio_thread = threading.Thread(target=audio_processor.process_stream)
