@@ -7,7 +7,6 @@ from movement.movement import PiCarXMovements
 
 def listen(car):
     uri = "ws://192.168.86.38:8765/websocket"
-    start_following_human(car)
 
     while True:
         try:
@@ -16,9 +15,7 @@ def listen(car):
             while True:
                 message = ws.recv()
                 print(f"Message received: {message}")
-                stop_following_human(car)
                 process_command(car, message)
-                start_following_human(car)
         except websocket.WebSocketConnectionClosedException:
             print("WebSocket connection closed. Reconnecting...")
             time.sleep(5)
@@ -64,12 +61,7 @@ if __name__ == "__main__":
         Vilib.display(local=True,web=True)
 
         # Create and start WebSocket listening thread
-        listen_thread = threading.Thread(target=listen, args=(car,), daemon=True)
-        listen_thread.start()
-
-        # Keep the main thread alive while the other threads are running
-        listen_thread.join()
+        listen(car)
     finally:
-        stop_following_human(car)
         Vilib.camera_close()
         car.reset()

@@ -1,2 +1,4 @@
 *.wav
 **/__pycache__/
+tmp/video/*
+tmp/audio/*
