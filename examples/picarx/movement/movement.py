@@ -53,15 +53,18 @@ class PiCarXMovements:
 
             # Stop moving after the specified time
             if time_to_move > 0 and (current_time - start_time) >= time_to_move:
+                print("Time to move has elapsed")
                 self.stop()
                 break
 
             # Adjust speed based on obstacle detection
             obstacle_status = self.detect_obstacle()
             if obstacle_status == 'danger':
+                print("Obstacle detected. Stopping.")
                 self.px.stop()
                 break
             elif obstacle_status == 'caution':
+                print("Obstacle detected. Reducing speed.")
                 adjusted_speed = max(speed / 2, 10)  # Reduce speed but not lower than 10
             else:
                 adjusted_speed = speed
