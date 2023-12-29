@@ -1,6 +1,6 @@
 def welcome_message():
     print("""
-    PROJECT OSIRIS
+    ChatClue: Osiris
                 
       /\_/\  
      ( o.o )   
