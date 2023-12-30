@@ -195,23 +195,19 @@ class AudioProcessor:
             Tuple[bool, list]: A tuple containing a boolean indicating whether it's a tool request, 
                                and the conversation array for further processing.
         """
-        if CONVERSATIONS_CONFIG.get("predictive_tool_calls", False):
-            call_type_messages = self.openai_conversation_builder.create_check_if_tool_call_messages(result)
-            openai_is_tool_response = self.openai_client.create_completion(call_type_messages, False, {"type": "json_object"}, openai_functions, True)
-            
-            is_tool_request = False
-            conversation = self.openai_conversation_builder.create_recent_conversation_messages_array(result)
+        call_type_messages = self.openai_conversation_builder.create_check_if_tool_call_messages(result)
+        openai_is_tool_response = self.openai_client.create_completion(call_type_messages, False, {"type": "json_object"}, openai_functions, True)
+        
+        is_tool_request = False
+        conversation = self.openai_conversation_builder.create_recent_conversation_messages_array(result)
 
-            try:
-                if openai_is_tool_response and openai_is_tool_response.choices:
-                    is_tool_request = json.loads(openai_is_tool_response.choices[0].message.content).get("is_tool", False)
-            except (TypeError, AttributeError, json.JSONDecodeError):
-                print("Error parsing OpenAI response or response not in expected format.")
+        try:
+            if openai_is_tool_response and openai_is_tool_response.choices:
+                is_tool_request = json.loads(openai_is_tool_response.choices[0].message.content).get("is_tool", False)
+        except (TypeError, AttributeError, json.JSONDecodeError):
+            print("Error parsing OpenAI response or response not in expected format.")
 
-            return is_tool_request, conversation
-        else:
-            conversation = self.openai_conversation_builder.create_recent_conversation_messages_array(result)
-            return True, conversation
+        return is_tool_request, conversation
 
     def handle_tool_request(self, result, conversation):
         """

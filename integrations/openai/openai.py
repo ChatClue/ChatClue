@@ -3,7 +3,7 @@ import threading
 import logging
 import tiktoken
 import time
-from config import OPENAI_SETTINGS, CONVERSATIONS_CONFIG
+from config import OPENAI_SETTINGS
 from openai import OpenAI, OpenAIError
 from integrations.openai.openai_conversation_builder import OpenAIConversationBuilder
 
@@ -64,12 +64,9 @@ class OpenAIClient:
                 model = self.image_model
 
             tool_choice = None
-            if not CONVERSATIONS_CONFIG.get("predictive_tool_calls", False):
-                if tools is not None and not is_tool_call:
-                    # Modify the last message to prompt for a tool choice if tools are available
-                    recent_messages[-1]["content"] = "Please pick a tool from the tools array and return a tools response to complete this request: " + recent_messages[-1]["content"]
-                    tool_choice = "auto"
-            elif tools is not None: 
+            if tools is not None and not is_tool_call:
+                # Modify the last message to prompt for a tool choice if tools are available
+                recent_messages[-1]["content"] = "Please pick a tool from the tools array and return a tools response to complete this request: " + recent_messages[-1]["content"]
                 tool_choice = "auto"
 
             # Create a completion request to the OpenAI API
