@@ -48,6 +48,8 @@ def process_command(car, message):
                 car.move_head(tilt_increment, pan_increment)
             elif action == "stop":
                 car.stop()
+            elif action == "focus_on_human":
+                car.start_focus_on_human()
         else: 
             print("Not a JSON command")
     except json.JSONDecodeError:

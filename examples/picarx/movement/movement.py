@@ -45,6 +45,7 @@ class PiCarXMovements:
         self.is_moving = True
         self.drive_angle = self.clamp_number(self.drive_angle + angle, -40, 40)
         self.px.set_dir_servo_angle(self.drive_angle)
+        self.stop_focus_on_human()
 
         start_time = time.time()
 
@@ -153,6 +154,7 @@ class PiCarXMovements:
         if self.focus_thread.is_alive():
             self.focus_thread.join()
             Vilib.face_detect_switch(False)
+        self.reset_head()
 
     def follow_the_human(self):
         Vilib.face_detect_switch(True)
@@ -227,9 +229,15 @@ class PiCarXMovements:
             self.move_timer.cancel()
         self.px.stop()
         self.is_moving = False
-    
-    def reset(self):
-        self.stop()
-        self.px.set_dir_servo_angle(0)
+
+    def reset_head(self):
         self.px.set_cam_tilt_angle(0)
         self.px.set_cam_pan_angle(0)
+    
+    def reset_wheels(self):
+        self.px.set_dir_servo_angle(0)
+
+    def reset(self):
+        self.stop()
+        self.reset_wheels()
+        self.reset_head()

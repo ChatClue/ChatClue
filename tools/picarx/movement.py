@@ -67,6 +67,23 @@ def move_robot_head_up_down_left_or_right(tilt_increment, pan_increment):
     broadcaster.send_message(command)
 
 @openai_function
+def focus_on_the_human():
+    """
+    {
+        "description": "Orients the robot's head to focus on the human speaker when triggered by phrases like 'can you look at me', 'can you focus on me', or 'keep your eye on me' or anything similar. The robot uses its sensors to locate and orient towards the speaker.",
+        "is_conversational": false,
+        "parameters": {
+            "type": "object",
+            "properties": {}
+        }
+    }
+    """
+    command = {
+        "action": "focus_on_human"
+    }
+    broadcaster.send_message(command)
+
+@openai_function
 def stop(self):
     """
     {
