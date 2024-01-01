@@ -91,7 +91,7 @@ class PiCarXMovements:
         elif direction == "backward":
             self.px.backward(speed)
 
-    def move_head(self, tilt_angle, pan_angle, step=1):
+    def move_head(self, tilt_angle, pan_angle, step=3):
         """
         Adjusts the robot's head tilt and pan angles to the specified angles.
 
