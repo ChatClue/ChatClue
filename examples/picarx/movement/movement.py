@@ -123,6 +123,12 @@ class PiCarXMovements:
     
 
     def focus_on_human(self):
+        self.move_head(35, 0)
+        self.move_head(-35, 0)
+        self.move_head(0, 35)
+        self.move_head(0, -35)
+        self.move_head(0, 0)
+        self.move_head(35,0)
         Vilib.face_detect_switch(True)
         while not self.stop_requested:
             if Vilib.detect_obj_parameter['human_n'] != 0:
