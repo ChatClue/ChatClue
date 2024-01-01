@@ -67,10 +67,10 @@ def move_robot_head_up_down_left_or_right(tilt_increment, pan_increment):
     broadcaster.send_message(command)
 
 @openai_function
-def focus_on_the_human():
+def keep_robots_focus_on_the_human():
     """
     {
-        "description": "Orients the robot's head to focus on the human speaker when triggered by phrases like 'can you look at me', 'can you focus on me', or 'keep your eye on me' or anything similar. The robot uses its sensors to locate and orient towards the speaker.",
+        "description": "Keeps the robot's head focused on the human (the robot is track the human's movement). This should only be called if the request is to follow or track the human in some way, like 'keep your eyes on me' or 'can you keep your focus on me' or anything similar. This tool should not be called if the user is making a one time request for the robot to look somewhere specific.",
         "is_conversational": false,
         "parameters": {
             "type": "object",
