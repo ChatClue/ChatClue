@@ -67,6 +67,7 @@ class AudioOutput:
         Args:
             text (str): The text to be converted to speech and played.
         """
+        logging.critical(f"Adding text to audio queue: {text}")
         self.request_queue.put(text)
 
     def process_queue(self):
@@ -128,6 +129,7 @@ class AudioOutput:
                 pygame.time.Clock().tick(10)
             # Remove the audio file after playing
             if os.path.exists(filename) and AUDIO_SETTINGS.get('DELETE_FILES', True):
+                logging.info(f"Removing audio file {filename}")
                 os.remove(filename)
         except pygame.error as e:
             logging.error(f"Error playing audio file: {e}")

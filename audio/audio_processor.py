@@ -325,7 +325,7 @@ class AudioProcessor:
                 response_text = chunk.choices[0].delta.content
                 print(response_text, end='', flush=True)
                 self.update_response_end_time()
-                self.audio_out_response_buffer += response_text
+                self.audio_out_response_buffer += response_text.replace('"','')
                 if self.audio_out_response_buffer.endswith(('.', '?', '!', ';')):
                     self.audio_out.add_to_queue(self.audio_out_response_buffer)
                     self.audio_out_response_buffer = ""
