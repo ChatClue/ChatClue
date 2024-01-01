@@ -151,7 +151,7 @@ class PiCarXMovements:
         Signals the human focus function to stop.
         """
         self.stop_requested = True
-        if self.focus_thread.is_alive():
+        if self.focus_thread is not None and self.focus_thread.is_alive():
             self.focus_thread.join()
             Vilib.face_detect_switch(False)
         self.reset_head()
