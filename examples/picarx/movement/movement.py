@@ -59,13 +59,16 @@ class PiCarXMovements:
 
             # Adjust speed based on obstacle detection
             obstacle_status = self.detect_obstacle()
-            if obstacle_status == 'danger':
-                print("Obstacle detected. Stopping.")
-                self.px.stop()
-                break
-            elif obstacle_status == 'caution':
-                print("Obstacle detected. Reducing speed.")
-                adjusted_speed = max(speed / 2, 10)  # Reduce speed but not lower than 10
+            if direction == 'forward':
+                if obstacle_status == 'danger':
+                    print("Obstacle detected. Stopping.")
+                    self.px.stop()
+                    break
+                elif obstacle_status == 'caution':
+                    print("Obstacle detected. Reducing speed.")
+                    adjusted_speed = max(speed / 2, 10)  # Reduce speed but not lower than 10
+                else:
+                    adjusted_speed = speed
             else:
                 adjusted_speed = speed
 

@@ -1,4 +1,4 @@
-from config import TTS_CONFIG
+from config import TTS_CONFIG, AUDIO_SETTINGS
 from utils.os.helpers import OSHelper
 import importlib
 import os
@@ -127,7 +127,7 @@ class AudioOutput:
             while pygame.mixer.music.get_busy():
                 pygame.time.Clock().tick(10)
             # Remove the audio file after playing
-            if os.path.exists(filename):
+            if os.path.exists(filename) and AUDIO_SETTINGS.get('DELETE_FILES', True):
                 os.remove(filename)
         except pygame.error as e:
             logging.error(f"Error playing audio file: {e}")

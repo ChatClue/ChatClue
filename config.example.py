@@ -59,7 +59,11 @@ AUDIO_SETTINGS = {
     "SOUND_DEVICE_BLOCK_SIZE": 28000,
 
     # The name of the sound input device to be used. 'default' uses the system's default device.
-    "SOUND_DEVICE_DEVICE": "default"
+    "SOUND_DEVICE_DEVICE": "default",
+
+    # If true, audio files generated for TTS will be deleted once they are played. If you'd like to save them, set this to False. 
+    # All generated audio files are saved in tmp/audio.
+    "DELETE_FILES": True
 }
 
 VIDEO_SETTINGS = {
@@ -78,6 +82,9 @@ VIDEO_SETTINGS = {
 
     # This deterines how often a frame is saved to tmp/video, in seconds. These images are used ad-hoc for analysis.
     "CAPTURE_INTERVAL": 1,
+
+    # If set to true, on system shutdown, all video files in tmp/video will be deleted. Set to false if you would like to save them.
+    "DELETE_FILES": True
 }
 
 # VISION_ANALYSIS_SETTINGS configures the vision analysis service adapter. Only applicable if VIDEO_SETTINGS["CAPTURE_VIDEO"] is true.  Otherwise, no vision analysis will be performed.
@@ -194,7 +201,6 @@ TTS_CONFIG = {
     #
     # Additional Adapters: Please feel free to add your own adapter classes to the audio/tts_adapters 
     #                      directory for your own TTS service / models. 
-
     "tts_adapter": "audio.tts_adapters.pyttsx3.Pyttsx3Adapter"
 }
 

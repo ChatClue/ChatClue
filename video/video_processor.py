@@ -5,6 +5,7 @@ import queue
 import logging
 import threading
 import time
+import uuid
 from config import VIDEO_SETTINGS
 from utils.os.helpers import OSHelper
 
@@ -24,7 +25,6 @@ class VideoProcessor:
         self.frame_rate = VIDEO_SETTINGS.get('FRAME_RATE', 30)
         self.device = VIDEO_SETTINGS.get('VIDEO_DEVICE', 0)
         self.capture_interval = VIDEO_SETTINGS.get('CAPTURE_INTERVAL', 1)
-        self.frame_counter = 0
         self.last_capture_time = time.time()
         self.frame_queue = queue.Queue()
 
@@ -52,10 +52,9 @@ class VideoProcessor:
 
                 # Capture frames at a set interval for saving
                 if time.time() - self.last_capture_time > self.capture_interval:
-                    frame_name = os.path.join(self.tmp_folder, f"frame_{self.frame_counter}.jpg")
+                    frame_name = os.path.join(self.tmp_folder, f"temp_video_file_{uuid.uuid4()}.jpg")
                     cv2.imwrite(frame_name, frame)
                     logging.debug(f"Frame saved as {frame_name}")
-                    self.frame_counter += 1
                     self.last_capture_time = time.time()
 
             self.clean_up()

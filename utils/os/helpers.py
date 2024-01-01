@@ -1,6 +1,7 @@
 import os
 import base64
 import logging
+from config import AUDIO_SETTINGS, VIDEO_SETTINGS
 
 class OSHelper:
     """
@@ -76,8 +77,11 @@ class OSHelper:
         for filename in os.listdir(directory_path):
             file_path = os.path.join(directory_path, filename)
             try:
-                os.remove(file_path)
-                logging.info(f"Removed file: {file_path}")
+                if AUDIO_SETTINGS.get('DELETE_FILES', True):
+                    os.remove(file_path)
+                    logging.info(f"Removed file: {file_path}")
+                else:
+                    logging.info(f"Skipping audio file removal due to configuration setting in AUDIO_SETTINGS: {file_path}")
             except OSError as e:
                 logging.info(f"Error removing file {file_path}: {e}")
     
@@ -96,8 +100,11 @@ class OSHelper:
         for filename in os.listdir(directory_path):
             file_path = os.path.join(directory_path, filename)
             try:
-                os.remove(file_path)
-                logging.info(f"Removed file: {file_path}")
+                if VIDEO_SETTINGS.get('DELETE_FILES', True):
+                    os.remove(file_path)
+                    logging.info(f"Removed file: {file_path}")
+                else: 
+                    logging.info(f"Skipping video file removal due to configuration setting in VIDEO_SETTINGS: {file_path}")
             except OSError as e:
                 logging.info(f"Error removing file {file_path}: {e}")
 
