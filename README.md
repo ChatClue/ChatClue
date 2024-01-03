@@ -75,8 +75,8 @@ Broadcasting can be used to interact and communicate with other devices througho
    - Simple configuration through the `config.py` file and environment variables.
 
 
-**Note**: This project is in active development. Stay tuned for updates and new capabilities!
+**Note**: This project is in active development.
 
 ---
 
-For more detailed information about tools and examples, please refer to the individual README files in the respective directories.
+For more detailed information about tools and examples, please refer to the individual README files in their respective directories.
