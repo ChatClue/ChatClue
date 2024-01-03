@@ -2,6 +2,10 @@
 
 ChatClue is an interactive platform where users can speak naturally to their computers, robots, and IoT devices in real-time. Devices can speak back using the built-in TTS (text-to-speech) adapters and perform real-world actions based on the user's requests. 
 
+<div align="center">
+   [![ChatClue Demonstration Video](https://img.youtube.com/vi/0GSLE4xcGfI/0.jpg)](https://www.youtube.com/watch?v=0GSLE4xcGfI)
+</div>
+
 * Natural language processing and computer responses are handled automatically through OpenAI's API.
 * Conversation storage and references are built-in and managed using PostgreSQL with the pgvector extension enabled. 
 * Video feed processing is handled automatically, allowing user's to ask their computer/robot/device questions like, "What do you think of this shirt?", "How many fingers am I holding up", "Describe the current scene", "Do you see any animals or unexpected people?"
